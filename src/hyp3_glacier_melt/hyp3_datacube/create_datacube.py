@@ -426,36 +426,36 @@ def search_s1_scenes_for_path_frame(
 
     results_list = list(results)
 
-    if results_list:
-        sample = results_list[0]
-        props = getattr(sample, "properties", {}) or {}
+    # if results_list:
+    #     sample = results_list[0]
+    #     props = getattr(sample, "properties", {}) or {}
 
-        log.info("Sample scene name: %s", getattr(sample, "sceneName", None))
-        log.info("Sample property keys: %s", sorted(props.keys()))
+    #     log.info("Sample scene name: %s", getattr(sample, "sceneName", None))
+    #     log.info("Sample property keys: %s", sorted(props.keys()))
 
-        for key in [
-            "pathNumber",
-            "frameNumber",
-            "frame",
-            "asfFrame",
-            "flightDirection",
-            "beamModeType",
-            "startTime",
-            "sceneName",
-        ]:
-            log.info("Sample property %s = %r", key, props.get(key))
+    #     for key in [
+    #         "pathNumber",
+    #         "frameNumber",
+    #         "frame",
+    #         "asfFrame",
+    #         "flightDirection",
+    #         "beamModeType",
+    #         "startTime",
+    #         "sceneName",
+    #     ]:
+    #         log.info("Sample property %s = %r", key, props.get(key))
 
 
-    log.info(
-        "ASF returned %d scenes for path=%s frame=%s",
-        len(results_list),
-        path,
-        frame,
-    )
+    # log.info(
+    #     "ASF returned %d scenes for path=%s frame=%s",
+    #     len(results_list),
+    #     path,
+    #     frame,
+    # )
 
     return results_list
 
-def build_scene_index(cfg: DatacubeBuildConfig) -> dict[str, dict[str, list[Any]]]:
+def build_scene_index(cfg) -> dict[str, dict[str, list[Any]]]:
     """
     Build:
         {
@@ -470,8 +470,8 @@ def build_scene_index(cfg: DatacubeBuildConfig) -> dict[str, dict[str, list[Any]
     scene_index: dict[str, dict[str, list[Any]]] = {}
 
     for path, frames in cfg.path_frame_dict.items():
-        grouped_by_date: dict[str, list[Any]] = defaultdict(list)
 
+        grouped_by_date: dict[str, list[Any]] = defaultdict(list)
         log.info("Building scene index for path %s with frames %s", path, frames)
 
         for frame in frames:
@@ -850,7 +850,7 @@ def build_datacube(cfg: DatacubeBuildConfig) -> Path:
     Main entrypoint for recreating the original 01_create_datacube workflow,
     but sourcing imagery through ASF search + HyP3 instead of local files.
 
-    This function will eventually preserve the notebook's original sequence:
+    This function preserves the notebook's original sequence:
       1. discover scenes by path/frame/date
       2. obtain RTC products + DEM
       3. mosaic/reproject/subset
@@ -875,12 +875,12 @@ def build_datacube(cfg: DatacubeBuildConfig) -> Path:
         if len(granules) >= 35:
             break
 
-    print("cfg.path_frame_dict =", cfg.path_frame_dict)
-    print("cfg.direction =", cfg.direction)
-    print("cfg.start_date =", cfg.start_date)
-    print("cfg.end_date =", cfg.end_date)
-    print("scene_index =", {k: list(v.keys())[:5] for k, v in scene_index.items()})
-    print("scene_index counts =", {k: len(v) for k, v in scene_index.items()})
+    # print("cfg.path_frame_dict =", cfg.path_frame_dict)
+    # print("cfg.direction =", cfg.direction)
+    # print("cfg.start_date =", cfg.start_date)
+    # print("cfg.end_date =", cfg.end_date)
+    # print("scene_index =", {k: list(v.keys())[:5] for k, v in scene_index.items()})
+    # print("scene_index counts =", {k: len(v) for k, v in scene_index.items()})
 
     if not granules:
         raise RuntimeError("No scenes found")
