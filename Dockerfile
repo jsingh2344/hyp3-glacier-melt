@@ -31,10 +31,9 @@ COPY . /hyp3-glacier-melt/
 
 RUN mamba env create -f /hyp3-glacier-melt/environment.yml && \
     conda clean -afy && \
-    conda activate hyp3-glacier-melt && \
     sed -i 's/conda activate base/conda activate hyp3-glacier-melt/g' /home/conda/.profile && \
     rm -rf /hyp3-glacier-melt/build /hyp3-glacier-melt/dist /hyp3-glacier-melt/*.egg-info && \
-    python -m pip install --no-cache-dir /hyp3-glacier-melt && \
+    conda run -n hyp3-glacier-melt python -m pip install --no-cache-dir /hyp3-glacier-melt && \
     chown -R ${CONDA_UID}:${CONDA_GID} /hyp3-glacier-melt /home/conda /opt/conda
 
 USER ${CONDA_UID}
