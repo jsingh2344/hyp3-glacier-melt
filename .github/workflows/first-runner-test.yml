@@ -5,7 +5,7 @@ on:
 
 jobs:
   hello:
-    runs-on: [self-hosted, linux, x64, docker, bigcpu]
+    runs-on: self-hosted
 
     steps:
       - name: Print basic info
