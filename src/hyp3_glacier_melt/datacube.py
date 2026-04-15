@@ -371,10 +371,10 @@ class sar_datacube():
 
     def annual_snowline_post_onset_map(self):
         """
-        A snowline onset map without post onset map, derived directly from the data_sl_cp masks generated in
+        A snowline onset map that requires min_dB_doy check, derived directly from the data_sl_cp masks generated in
         pixel_analysis()
         """
-        
+
         self.snowline_post_onset_doy_maps = {}
         
         years_unique = np.unique(self.years)
@@ -481,101 +481,6 @@ class sar_datacube():
 
             self.snowline_onset_doy_maps[year] = data_sl_cp_year_onset_doy
 
-    def annual_snowline_second_onset_map(self):
-        
-        self.snowline_second_onset_doy_maps = {}
-        
-        years_unique = np.unique(self.years)
-        for nyear, year in enumerate(years_unique):
-            # Subset dates for the given year
-            second_melt_onset_map = self.annual_second_onset_map_doy_maps[year] #to implement post onset logic
-            
-            year_idx = list(np.where(np.array(self.years) == year)[0])
-            months_subset = [self.months[x] for x in year_idx]
-            doys_subset = [self.doys[x] for x in year_idx]
-        
-            # Prevent melt/SL onset in winter months
-            data_sl_cp_year = self.data_sl_cp[year_idx,:,:]
-            
-            for nmonth, month in enumerate(months_subset):
-                if month in self.months2exclude_cp:
-                    data_sl_cp_year[nmonth,:,:] = 0
-
-            # Create a combined boolean mask:
-            # True only if (sl_cp == 1) AND (current_doy > melt_onset_doy)
-            post_melt_sl_mask = np.zeros_like(data_sl_cp_year, dtype=bool)
-            for i, doy in enumerate(doys_subset):
-                # For timestep i, mark pixels as True only if:
-                # 1. sl_cp is non-zero AND
-                # 2. current DOY > that pixel's melt onset DOY
-                post_melt_sl_mask[i, :, :] = (data_sl_cp_year[i, :, :] != 0) & (doy > second_melt_onset_map)
-
-            # Now get the first True value in this combined mask
-            data_sl_cp_year_onset_idx = post_melt_sl_mask.argmax(axis=0)
-            data_sl_cp_year_onset_idx = data_sl_cp_year_onset_idx * self.mask_good_pixels
-
-            # Only keep pixels where there was at least one True (same as normal melt logic from here)
-            data_sl_cp_year_sum = post_melt_sl_mask.sum(0)
-            data_sl_cp_year_sum[data_sl_cp_year_sum > 0] = 1
-            data_sl_cp_year_sum[np.isnan(data_sl_cp_year_sum)] = 0
-            data_sl_cp_year_onset_idx[data_sl_cp_year_sum == 0] = np.nan
-        
-            # Plot the julian day of ice onset
-            onset_idx_unique = np.unique(data_sl_cp_year_onset_idx)
-            data_sl_cp_year_onset_doy = np.zeros(data_sl_cp_year_onset_idx.shape)
-            for onset_idx in onset_idx_unique:
-                if not np.isnan(onset_idx):
-                    onset_idx = int(onset_idx)
-                    doy = doys_subset[onset_idx]
-                    # convert onset_idx to doy 
-                    data_sl_cp_year_onset_doy[data_sl_cp_year_onset_idx == onset_idx] = doy            
-        
-            data_sl_cp_year_onset_doy[data_sl_cp_year_onset_doy==0] = np.nan
-
-            self.snowline_second_onset_doy_maps[year] = data_sl_cp_year_onset_doy
-    
-
-
-    def save_melt_onset_tiffs(self, out_dir):
-        os.makedirs(out_dir, exist_ok=True)
-
-        # get geoinfo from the xarray dataset
-        gt = self.ds.attrs.get('geotransform', None)
-        crs = self.ds.attrs.get('projection', None)
-
-        if gt is None:
-            raise ValueError("Dataset is missing 'geotransform' in attrs.")
-        if crs is None:
-            raise ValueError("Dataset is missing 'projection' in attrs.")
-
-        # turn GDAL-style geotransform into rasterio Affine
-        # geotransform = [x_min, x_res, 0, y_max, 0, y_res_neg]
-        transform = Affine.from_gdal(*gt)
-
-        for year in [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]:
-            onset_arr = self.melt_onset_doy_maps[year]
-            # make sure it's float32 so NaNs work
-            arr = onset_arr.astype("float32")
-
-            height, width = arr.shape
-
-            out_fn = os.path.join(out_dir, f"melt_onset_{year}.tif")
-
-            with rasterio.open(
-                out_fn,
-                "w",
-                driver="GTiff",
-                height=height,
-                width=width,
-                count=1,
-                dtype="float32",
-                crs=crs,
-                transform=transform,
-                nodata=np.nan,
-            ) as dst:
-                dst.write(arr, 1)
-
-
     def generate_elevs_from_onsets(self, glacno, out_dir, 
                                                 doy_step=10,
                                                 percentile=1.0,
@@ -588,8 +493,6 @@ class sar_datacube():
         mask_glac = self.glac_mask[glacno] 
         total_pixels = np.nansum(mask_glac)
         glac_dem = self.glac_dem[glacno]
-        min_dB_elevs_glac = self.min_dB_elevs[glacno]
-        
 
         dem_values_sorted = np.sort(self.glac_dem[glacno].reshape(1,-1))[0,:]
         dem_values_sorted = dem_values_sorted[dem_values_sorted > -9999]
@@ -602,52 +505,38 @@ class sar_datacube():
             original_snowline_onset_map = self.snowline_onset_doy_maps[year]
             snowline_onset_map = self.snowline_post_onset_doy_maps[year]
             second_melt_onset_map = self.annual_second_onset_map_doy_maps[year]
-            second_snow_onset_map = self.snowline_second_onset_doy_maps[year]
-            min_dB_map = self.min_dB_doys[year]
 
             # Mask valid glacier pixels
             h, w = mask_glac.shape
-            #print("h, w:", h, w)
 
             xb0 = self.glac_bounds[glacno]['xmin']
             yb0 = self.glac_bounds[glacno]['ymin']
 
             # Slice onset_map using height/width from mask
             melt_onset_glac = melt_onset_map[xb0 : xb0 + h,      # h rows
-                                             yb0 : yb0 + w]       # w cols
+                                             yb0 : yb0 + w]      # w cols
             
             snowline_onset_glac = snowline_onset_map[xb0 : xb0 + h,      # h rows
-                                                     yb0 : yb0 + w]       # w cols
+                                                     yb0 : yb0 + w]      # w cols
 
-            second_melt_onset_glac = second_melt_onset_map[xb0 : xb0 + h,      # h rows
-                                                     yb0 : yb0 + w]       # w cols
-            second_snow_onset_glac = second_snow_onset_map[xb0 : xb0 + h,      # h rows
+            second_melt_onset_glac = second_melt_onset_map[xb0 : xb0 + h, # h rows
                                                      yb0 : yb0 + w]       # w cols
             original_snowline_onset_map = original_snowline_onset_map[xb0 : xb0 + h,      # h rows
-                                                     yb0 : yb0 + w]       # w cols
-            
-            min_dB_map_glac = min_dB_map[xb0 : xb0 + h,      # h rows
-                                         yb0 : yb0 + w]       # w cols
-         
+                                                     yb0 : yb0 + w]                       # w cols
             
             # Generate onset maps clipped to glacier bounds
             melt_onset_map = np.where(mask_glac == 1, melt_onset_glac, np.nan) #primary mask for extent math
             original_snowline_onset_map = np.where(mask_glac == 1, original_snowline_onset_map, np.nan)
             snowline_onset_map = np.where(mask_glac == 1, snowline_onset_glac, np.nan)
             second_melt_onset_map = np.where(mask_glac == 1, second_melt_onset_glac, np.nan)
-            second_snow_onset_map = np.where(mask_glac == 1, second_snow_onset_glac, np.nan)
-            min_dB_map = np.where(mask_glac == 1, min_dB_map_glac, np.nan)
             
-
             #pure onset mask
             valid_mask = (~np.isnan(melt_onset_map))
             melt_onset_flat = melt_onset_map[valid_mask]
             snowline_onset_flat = snowline_onset_map[valid_mask] #these are 1d due to numpy indexing behavior!
 
-
             if (melt_onset_flat.size / total_pixels < min_valid_frac or
                snowline_onset_flat.size / total_pixels < min_valid_frac):
-                
                 print(f"  Skipping {year}: insufficient valid pixels.")
                 continue
 
@@ -661,29 +550,22 @@ class sar_datacube():
             
             for i, doy in enumerate(doys):
                 nscene = year_idx[i]
-                min_dB_elevs_glac_single = min_dB_elevs_glac[nscene]
                 # Convert DOY → datetime
                 glac_times = np.array(self.dates).astype("datetime64[D]")
                 date = glac_times[nscene]
                 # build 2D melted mask for this DOY
                 melted_2d = (melt_onset_map <= doy)
                 melted_2d_mask = melted_2d.copy()
-
                 original_snowline_2d = (original_snowline_onset_map <= doy)
                 snowline_2d = (snowline_onset_map <= doy) 
                 second_melt_2d = (second_melt_onset_map <= doy)
-                second_snow_2d = (second_snow_onset_map <= doy)
-                min_dB_2d = (min_dB_map <= doy)
-
                 # now flatten using valid_mask
                 melt_elevs = np.sort((self.glac_dem[glacno])[valid_mask & melted_2d])
 
                 ## POST - PROCESSING ##
-
                 #apply snowline correction to remove lower pixels for allmelt logic
                 allmelt_mask = melted_2d & (~snowline_2d) 
                 allmelt_mask = allmelt_mask | second_melt_2d
-                
                 # ---------- ---------- ALL MELT CORRECTION: repeat for equal area elevation bin ---------- ----------
                 allmelt_elev = 0
                 allmelt_100 = False
@@ -696,7 +578,7 @@ class sar_datacube():
                         mask_bin[(self.glac_dem[glacno] > bin_elev_lower) & (self.glac_dem[glacno] <= bin_elev_upper)] = 1
                         bin_count = mask_bin.sum()
                 
-                        data_cp_bin = allmelt_mask * mask_bin  # changed from data_cp_single to melted
+                        data_cp_bin = allmelt_mask * mask_bin  
                         data_cp_bin_count = np.nansum(data_cp_bin)
                 
                         frac_melt = data_cp_bin_count / bin_count
@@ -711,7 +593,6 @@ class sar_datacube():
                             allmelt_100 = True
 
                 # Apply "all melt" correction
-                snow_allmelt_elev = allmelt_elev
                 if allmelt_elev > 0:
                     melted_2d[glac_dem < allmelt_elev] = 1
 
@@ -722,38 +603,14 @@ class sar_datacube():
                     n_melt = np.sum(melted_2d) - 1  
                     melt_extent_elev = dem_values_sorted[n_melt]
 
-                #print("Onset:", year, nscene, n_melt, allmelt_elev, melt_extent_elev)
-
                 ### Add nomelt pixels to help snowline post-processing
                 nomelt_pixels_below = np.nansum((glac_dem < melt_extent_elev) & (melted_2d == 0))
                 melt_extent_elev_min = dem_values_sorted[n_melt - nomelt_pixels_below]
                 
                 first_melt = original_snowline_2d & (~melted_2d_mask) #use mask to avoid adjusting w allmelt included melt pixels
                 final_snowline = first_melt | snowline_2d
-                #final_snowline = final_snowline & min_dB_2d #add min dB constraint to snowline consideration
-                #final_snowline = snowline_2d.copy()
-                # prev_pixels = np.nansum(snowline_2d)
-                # snowline_2d = snowline_2d & (~second_melt_2d) #remove second melt pixels from snowline consideration
-                # pixels_after_removing_second_melt = np.nansum(snowline_2d)
-                # snowline_2d = snowline_2d | second_snow_2d #add second snowline pixels to snowline consideration
-                # pixels_after_adding_second_snow = np.nansum(snowline_2d)
-
-                # print(f'''Onset method at year {year}, scene {nscene}, date {date},
-                #       snowline after adding snow pixels 1st time: {np.nansum(final_snowline)},
-                #       after elevation adjustment: {pixels_after_elev_adjustment},
-                #       ''')
-                # print(f'''Onset method at year {year}, scene {nscene}, date {date}: 
-                #       After subtracting melt: {first_melt_pixels}
-                #       Adding original snow onset: {prev_pixels}, 
-                # after removing 2nd melt: {pixels_after_removing_second_melt}, 
-                # after adding 2nd snow: {pixels_after_adding_second_snow},
-                # allmelt elevation (currently out of use): {allmelt_elev}
-                # after allmelt correction: {pixels_after_allmelt},
-                # after elev adjustment: {pixels_after_elev_adjustment}''')
-
                 
                 ### allmelt area binning:
-
                 # ---------- ---------- ALL MELT CORRECTION: repeat for equal area elevation bin ---------- ----------
                 allmelt_elev = 0
                 allmelt_100 = False
@@ -792,82 +649,9 @@ class sar_datacube():
                     melt_idx = int(melt_pixels - 1)               
                 melt_area_m2 = melt_idx*self.xres*self.yres
 
-
-                ### NEW SNOWLINE METHOD: allmelt-based
-
-                # allmelt_elev = 0
-                # allmelt_100 = False
-                # rev_allmelt_threshold = 0.9
-                # rev_allmelt_pixels = 10
-
-                # for nbin, bin_elev_lower in reversed(list(enumerate(self.glac_bins[glacno][:-1]))):
-                    
-                #     bin_elev_upper = self.glac_bins[glacno][nbin+1]
-                #     if not allmelt_100:
-                #         # Create mask based on elevations
-                #         mask_bin = np.zeros(self.glac_dem[glacno].shape)
-                #         mask_bin[(self.glac_dem[glacno] > bin_elev_lower) & (self.glac_dem[glacno] <= bin_elev_upper)] = 1
-                #         bin_count = mask_bin.sum()
-                
-                #         data_cp_bin = allmelt_mask * mask_bin  # changed from data_cp_single to melted
-                #         data_cp_bin_count = np.nansum(data_cp_bin)
-                
-                #         frac_melt = data_cp_bin_count / bin_count
-                
-                #         # Record "all melt" elevation 
-                #         if allmelt_elev == 0 and frac_melt > rev_allmelt_threshold and bin_count > rev_allmelt_pixels:
-                #             allmelt_elev = bin_elev_lower
-                                
-                #         # Record "all melt" elevation in the case that 100% hasn't been found yet
-                #         if not allmelt_100 and frac_melt == 1:
-                #             allmelt_elev = bin_elev_lower
-                #             allmelt_100 = True
-
-
-                # allmelt_elev = 0
-                # allmelt_100 = False
-                # snow_allmelt_threshold = 0.9
-                # snow_allmelt_pixels = 10
-
-                # for nbin, bin_elev_lower in reversed(list(enumerate(self.glac_bins[glacno][:-1]))):
-
-                #     bin_elev_upper = self.glac_bins[glacno][nbin+1]
-                #     if not allmelt_100:
-                #         # Create mask based on elevations
-                #         mask_bin = np.zeros(self.glac_dem[glacno].shape)
-                #         mask_bin[(self.glac_dem[glacno] > bin_elev_lower) & (self.glac_dem[glacno] <= bin_elev_upper)] = 1
-                #         bin_count = mask_bin.sum()
-                
-                #         data_cp_bin = final_snowline * mask_bin  # changed from data_cp_single to melted
-                #         data_cp_bin_count = np.nansum(data_cp_bin)
-                
-                #         frac_melt = data_cp_bin_count / bin_count
-                #         # if year == 2019 and nscene in [58, 59, 60, 61, 62, 63]:
-                #         #     print(f"  Bin {nbin}: elev {bin_elev_lower}-{bin_elev_upper}, count: {bin_count}, melt count: {data_cp_bin_count}, frac melt: {frac_melt}")
-                
-                #         # Record "all melt" elevation 
-                #         if allmelt_elev == 0 and frac_melt > snow_allmelt_threshold and bin_count > snow_allmelt_pixels and bin_elev_lower < melt_extent_elev:
-                #             allmelt_elev = bin_elev_lower
-                                
-                #         # Record "all melt" elevation in the case that 100% hasn't been found yet
-                #         if not allmelt_100 and frac_melt == 1 and bin_elev_lower < melt_extent_elev:
-                #             allmelt_elev = bin_elev_lower
-                #             allmelt_100 = True
-                
-                #max_snowline = allmelt_elev #to use new allmelt
-                #using allmelt_mask, which currently has second melt pixels included:
-                #snow_pixels = (~allmelt_mask) & valid_mask
-
-                #pre_elev_snow_pixels = np.nansum(final_snowline)
-                
-                #derive similar elev cap:
-                
                 max_snowline = melt_extent_elev_min
-                #if snow_allmelt_elev > 0:
-
                 final_snowline_for_mask = final_snowline.copy()
                 final_snowline = final_snowline & (glac_dem < max_snowline) #so, using pixels after first melt + first ice + elev filter
-                #note this is with ground-up allmelt! aka the same used for the melt extent
 
                 n_melt = np.nansum(final_snowline) 
                 if n_melt == 0:
@@ -876,17 +660,6 @@ class sar_datacube():
                 else:
                     snowline_elev = dem_values_sorted[n_melt - 1]
                     ice_area_m2 = n_melt * pixel_area_m2
-
-                # print(f'''year: {year}, scene: {nscene}, allmelt elevation: {snow_allmelt_elev}, 
-                #       pre_adj_pixels: {pre_elev_snow_pixels}, n_melt : {n_melt}, snowline elev: {snowline_elev}''')
-
-                # print(f'''Onset method at year {year}, scene {nscene}, date {date}, 
-                #       allmelt elevation (reverse): {allmelt_elev}, pre-elev adj snow pixels: {pre_elev_snow_pixels},
-                #       post-elev adj snow pixels: {n_melt},
-                #       melt elevation: {melt_extent_elev}, snowline elevation: {snowline_elev},
-                #       original_snow_pixel_count: {np.nansum(original_snowline_2d)},'''
-                #       )
-
 
                 results.append({
                     "year": year,
@@ -899,247 +672,6 @@ class sar_datacube():
                     "ice_fraction" : ice_area_m2 / total_glacier_area_m2,
                     "glacier_area_m2" : total_glacier_area_m2,
                 })
-
-                # --- Plot melt mask for specified year ---
-                plot_dir = None #not plotting rn
-                #if plot_dir and year == plot_year:
-                if glacno == 5999 and plot_dir and year == 2019:
-
-                    # Extract the SAR dB slice
-                    glac_cube = self.data_masked
-                    sar_dB = glac_cube[nscene, :, :]
-                    sar_dB_glac = sar_dB[xb0 : xb0 + h,      # h rows
-                                        yb0 : yb0 + w]       # w cols
-
-                    # ---------- NEW: cp mask at nearest scene ----------
-                    # data_cp_glac has shape (time, y, x) for this glacier
-                    data_cp_glac = self.glac_data_cp[glacno]
-                    cp_scene = data_cp_glac[nscene, :, :]  
-
-                    data_sl_cp_glac = self.glac_data_sl_cp[glacno]
-                    data_sl_cp_glac_single = data_sl_cp_glac[nscene, :, :]  # This is already glacier-sized
-                    sl_cp_overlay = np.where(data_sl_cp_glac_single == 1, 1.0, np.nan)
-
-                    #print(nscene, np.sum(snowline_2d), np.sum(data_sl_cp_glac_single == 1))
-
-                    # build an overlay: 1 where cp==1, NaN elsewhere
-                    cp_overlay = np.where(cp_scene == 1, 1.0, np.nan)
-                    melt_overlay = np.where(melted_2d_mask == 1, 1.0, np.nan)
-                    ice_overlay = np.where(snowline_2d == 1, 1.0, np.nan)
-                    allmelt_overlay = np.where(allmelt_mask == 1, 1.0, np.nan)
-
-                    # ---------- NEW: Calculate difference between ice_mask_full and sl_cp_overlay ----------
-                    # Create binary versions for comparison (1 where valid, 0 elsewhere)
-                    sl_cp_binary = np.where(sl_cp_overlay == 1, 1, 0)
-
-                    final_snowline_overlay = np.where(final_snowline_for_mask == 1, 1.0, np.nan)
-
-                    ice_binary = np.where(final_snowline_overlay == 1, 1, 0)
-
-                    # Calculate difference: positive where ice but not sl_cp, negative where sl_cp but not ice
-                    snow_difference_mask = ice_binary - sl_cp_binary
-                    # Convert 0s to NaN for better visualization
-                    snow_difference_overlay = np.where(snow_difference_mask != 0, snow_difference_mask, np.nan)
-
-                    second_melt_overlay = np.where(second_melt_2d, 1.0, np.nan)
-
-
-                    # Calculated difference between first and second melt
-                    first_melt_binary = np.where(melt_overlay == 1, 1, 0)
-                    second_melt_binary = np.where(second_melt_overlay == 1, 1, 0)
-
-                    melt_difference_mask = first_melt_binary - second_melt_binary
-                    melt_difference_overlay = np.where(melt_difference_mask != 0, melt_difference_mask, np.nan)
-
-                    # DEM for this glacier
-                    dem_glac = self.glac_dem[glacno]
-
-                    grey = np.where(np.isnan(dem_glac), np.nan, 0.5)
-
-                    sar_dB_masked = np.where(np.isnan(dem_glac), np.nan, sar_dB_glac)
-
-                    melt_elev_mask = np.abs(glac_dem - melt_extent_elev) <= 50
-                    melt_elev_mask_overlay = np.where((melt_elev_mask & allmelt_mask), 1.0, np.nan)
-
-                    max_snow_elev_mask = np.abs(glac_dem - max_snowline) <= 50
-                    max_snow_elev_mask_overlay = np.where((max_snow_elev_mask & final_snowline_for_mask), 1.0, np.nan)
-                    #print("nscene:", nscene, "snow_allmelt_elev:", snow_allmelt_elev, "elev_mask pixels:", np.nansum(elev_mask))
-
-                    plot_coords = (195, 75) #(x, y) 
-
-                    # Plot
-                    backscatter_cmap = plt.cm.coolwarm_r  # reversed so low values = red, high = blue
-                                            
-                    fig, axes = plt.subplots(1, 5, figsize=(24, 6), constrained_layout=True)
-
-                    # ---------- LEFT: Backscatter + onset overlays ----------
-                    ax = axes[3]
-                    im2 = ax.imshow(grey, cmap="gray", vmin=0, vmax=1)  
-                    ax.imshow(
-                        allmelt_overlay,
-                        cmap = mcolors.ListedColormap(["red"]),
-                        alpha = 1.0
-                    )
-                    ax.imshow(
-                        melt_elev_mask_overlay,
-                        cmap=mcolors.ListedColormap(["black"]),  
-                        alpha=0.8
-                    )
-                    ax.set_title(
-                        f"{year} DOY {doy}\n({date}) — Melted pixels, max snow elev: {max_snowline}",
-                        fontsize=18
-                    )
-                    ax.axis("off")
-
-                    ax = axes[0]
-                    im0 = ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0)
-                    ax.set_title(
-                        f"Backscatter (dB)",
-                        fontsize=18
-                    )
-                    ax.axis("off")
-                    # ax.plot(plot_coords[0], plot_coords[1], marker='*', color='lime', markersize=12, 
-                    #     markeredgecolor='black', markeredgewidth=0.5)
-
-
-                    ax = axes[1]
-                    im1 = ax.imshow(grey, cmap="gray", vmin=0, vmax=1)  
-                    # overlay cp mask (e.g. magenta where cp==1)
-                    ax.imshow(
-                        sl_cp_overlay,
-                        cmap=mcolors.ListedColormap(["blue"]),
-                        alpha=0.6
-                    )
-                    ax.set_title(f"sl_cp mask, scene {nscene}", fontsize=18)
-                    ax.axis("off")
-
-                    ax = axes[2]
-                    im1 = ax.imshow(grey, cmap="gray", vmin=0, vmax=1)  
-                    # overlay cp mask (e.g. magenta where cp==1)
-                    ax.imshow(
-                        cp_overlay,
-                        cmap=mcolors.ListedColormap(["black"]),
-                        alpha=0.6
-                    )
-                    ax.set_title(f"cp mask", fontsize=18)
-                    ax.axis("off")
-
-                    ax = axes[4]
-                    im3 = ax.imshow(grey, cmap="gray", vmin=0, vmax=1) 
-                    # overlay cp mask (e.g. magenta where cp==1)
-                    ax.imshow(
-                        final_snowline_overlay,
-                        cmap=mcolors.ListedColormap(["cyan"]),
-                        alpha=0.6
-                    )
-                    ax.imshow(
-                        max_snow_elev_mask_overlay,
-                        cmap=mcolors.ListedColormap(["black"]),  
-                        alpha=0.8
-                    )
-                    ax.set_title(f"Final snowline mask", fontsize=18)
-                    ax.axis("off")
-
-                    # ax = axes[0]
-                    # im0 = ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0)
-                    # ax.imshow(
-                    #     melt_overlay,
-                    #     cmap=mcolors.ListedColormap(["black"]),
-                    #     alpha=0.6
-                    # )
-                    # # ice 
-                    # ax.imshow(
-                    #     ice_overlay,
-                    #     cmap=mcolors.ListedColormap(["cyan"]),  
-                    #     alpha=0.8
-                    # )
-                    # ax.set_title(
-                    #     f"{year} DOY {doy}\n({date}) — Melted pixels (black)",
-                    #     fontsize=11
-                    # )
-                    # ax.axis("off")
-
-                    # # ---------- SECOND: Backscatter + cp mask ----------
-                    # ax = axes[1]
-                    # im1 = ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0)
-                    # # overlay cp mask (e.g. magenta where cp==1)
-                    # ax.imshow(
-                    #     sl_cp_overlay,
-                    #     cmap=mcolors.ListedColormap(["magenta"]),
-                    #     alpha=0.6
-                    # )
-                    # ax.set_title(f"Backscatter (dB) + sl_cp mask, scene {nscene}", fontsize=11)
-                    # ax.axis("off")
-
-                    # # ---------- THIRD: DEM ----------
-                    # ax = axes[2]
-                    # im2 = ax.imshow(dem_glac, cmap="terrain")
-                    # ax.set_title("DEM (m)", fontsize=11)
-                    # ax.axis("off")
-
-                    # # ---------- FOURTH: Difference (ice_mask_full - sl_cp_overlay) ----------
-                    # ax = axes[3]
-                    # # Show backscatter as background
-                    # ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0, alpha=0.3)
-                    # # Show difference: 
-                    # # +1 (ice but not sl_cp) in one color, -1 (sl_cp but not ice) in another
-                    # im3 = ax.imshow(
-                    #     snow_difference_overlay,
-                    #     cmap=mcolors.ListedColormap(["red", "blue"]),  # red for -1, blue for +1
-                    #     #cmap=mcolors.ListedColormap(["magenta"]),
-                    #     vmin=-1,
-                    #     vmax=1,
-                    #     alpha=0.8
-                    # )
-                    # ax.set_title("Difference mask: onset - sl_cp", fontsize=11)
-                    # ax.axis("off")
-
-                    # # Fifth : second melt mask
-                    # ax = axes[4]
-                    # im1 = ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0)
-                    # # overlay cp mask (e.g. magenta where cp==1)
-                    # ax.imshow(
-                    #     final_snowline_overlay,
-                    #     cmap=mcolors.ListedColormap(["magenta"]),
-                    #     alpha=0.6
-                    # )
-                    # ax.set_title(f"Final snowline mask", fontsize=11)
-                    # ax.axis("off")
-
-                    # ax = axes[5]
-                    # im1 = ax.imshow(sar_dB_masked, cmap=backscatter_cmap, vmin=-25, vmax=0)
-                    # # overlay cp mask (e.g. magenta where cp==1)
-                    # ax.imshow(
-                    #     cp_overlay,
-                    #     cmap=mcolors.ListedColormap(["black"]),
-                    #     alpha=0.6
-                    # )
-                    # ax.set_title(f"Backscatter (dB) + cp mask, scene {nscene}", fontsize=11)
-                    # ax.axis("off")
-
-
-                    # Add one shared colorbar for backscatter (left + middle)
-                    # cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])  # (left, bottom, width, height)
-                    # cbar = fig.colorbar(im1, cax=cbar_ax)
-                    # cbar.set_label("σ⁰ (dB)", rotation=270, labelpad=15)
-
-                    # Save plot
-                    out_path = os.path.join(plot_dir, f"{glacno}_onset_map_{year}_doy{doy:03d}.png")
-                    # fig.text(0.5, -0.02, f'''cp: {cp_scene[plot_coords[1],  plot_coords[0]]}, sl_cp: {data_sl_cp_glac_single[plot_coords[1],  plot_coords[0]]}
-                    #                         melt mask: {melt_overlay[plot_coords[1],  plot_coords[0]]}, snowline mask: {final_snowline_overlay[plot_coords[1],  plot_coords[0]]}''', 
-                    #     ha='center', fontsize=14)
-                    plt.savefig(out_path, dpi=200, bbox_inches="tight")
-                    plt.close()
-
-            # Save CSV
-            # df = pd.DataFrame(results)
-            # min_elev = np.nanmin(self.glac_dem[glacno][self.glac_mask[glacno] == 1])
-            # max_elev = np.nanmax(self.glac_dem[glacno][self.glac_mask[glacno] == 1])
-            # df["melt_extent_elev_m"].fillna(0.0, inplace=True)
-            # df["melt_extent_elev_m"].replace(0.0, min_elev, inplace=True)
-            # df["glacier_max_elev_m"] = max_elev
-            # df["snowline_elev_m"].fillna(0.0, inplace=True)
-            # df["snowline_elev_m"].replace(0.0, min_elev, inplace=True)
 
             df = pd.DataFrame(results)
             min_elev = np.nanmin(self.glac_dem[glacno][self.glac_mask[glacno] == 1])
@@ -1179,81 +711,8 @@ class sar_datacube():
                 for csv_path in yearly_csv_paths:
                     if os.path.exists(csv_path):
                         os.remove(csv_path)
-            
-    
-
-    def plot_melt_onset_maps(self, glacno, out_dir, verbose=False):
-        """
-        Plot and save melt onset DOY maps for a single glacier for each year.
-
-        Output:
-            <out_dir>/<glacno>_melt_onset_<year>.png
-            <out_dir>/<glacno>_melt_onset_cons_<year>.png
-            <out_dir>/<glacno>_melt_onset_diff_<year>.png
-        """
-
-        os.makedirs(out_dir, exist_ok=True)
-
-        mask_glac = self.glac_mask[glacno]
-        h, w = mask_glac.shape
-
-        xb0 = self.glac_bounds[glacno]['xmin']
-        yb0 = self.glac_bounds[glacno]['ymin']
-
-        total_pixels = np.nansum(mask_glac)
-
-        vmin = 100
-        vmax = 300
-
-        # reversed plasma colormap for DOY maps
-        cmap = plt.cm.plasma_r.copy()
-        cmap.set_bad(alpha=0)   # fully transparent for NaN
-
-        # --- original onset maps ---
-        for year in [2018, 2019, 2020, 2021, 2022, 2023, 2024]:
-
-            onset_map_full = self.melt_onset_doy_maps[year]
-            onset_map_full = self.min_dB_doys[year]
-
-            onset_glac = onset_map_full[xb0 : xb0 + h,
-                                        yb0 : yb0 + w]
-
-            # apply glacier mask
-            onset_map_full_range = np.where(mask_glac == 1, onset_glac, np.nan)
-            onset_map_full_range = onset_map_full_range.astype(float)  # converts None -> nan
-
-            # apply DOY subset: keep ONLY 100–300 (clip outside range)
-            onset_map = onset_map_full_range.copy()
-            onset_map[onset_map_full_range < vmin] = vmin
-            onset_map[onset_map_full_range > vmax] = vmax
-
-            valid_frac = np.sum(~np.isnan(onset_map)) / total_pixels
-            if valid_frac < 0.01:
-                print(f"Skipping {year}: insufficient valid melt onset pixels")
-                continue
-
-            # mask off-glacier and no-onset pixels
-            display_mask = np.isnan(onset_map) | (mask_glac == 0)
-            display_ma = np.ma.array(onset_map, mask=display_mask)
-
-            plt.figure(figsize=(8, 6))
-            im = plt.imshow(display_ma, cmap=cmap, vmin=vmin, vmax=vmax)
-
-            # glacier outline in green
-            plt.contour(mask_glac, levels=[0.5], colors='green', linewidths=1.5)
-
-            plt.title(f"Melt Onset DOY (100–300) — Glacier {glacno}, {year} (original)")
-            plt.colorbar(im, label="Day of Year")
-            plt.axis("off")
-
-            out_path = os.path.join(out_dir, f"{glacno}_melt_onset_{year}.png")
-            plt.savefig(out_path, dpi=200, bbox_inches="tight")
-            plt.close()
-
         
-
-
-
+    
     def single_glacier_preprocess(self, glacno=None, area_km2=10, verbose=False):
         """
         Glacier melt extent elevations for individual glaciers
