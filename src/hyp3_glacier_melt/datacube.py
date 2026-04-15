@@ -18,6 +18,9 @@ from numpy.lib.stride_tricks import sliding_window_view
 from netCDF4 import Dataset
 import os
 
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 
 class sar_datacube():
     """
