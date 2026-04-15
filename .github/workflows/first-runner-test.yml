@@ -1,0 +1,21 @@
+name: First runner test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: [self-hosted, linux, x64, docker, bigcpu]
+
+    steps:
+      - name: Print basic info
+        run: |
+          echo "Connected to self-hosted runner"
+          echo "CPU count:"
+          nproc
+          echo
+          echo "Memory:"
+          free -h
+          echo
+          echo "Docker:"
+          docker --version
