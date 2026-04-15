@@ -1,4 +1,4 @@
-name: Docker test on remote machine
+name: Real glacier run
 
 on:
   workflow_dispatch:
@@ -12,6 +12,15 @@ jobs:
         run: |
           docker pull ghcr.io/jsingh2344/glacier-melt:latest
 
-      - name: Test container (safe)
+      - name: Run glacier pipeline
         run: |
-          docker run --rm ghcr.io/jsingh2344/glacier-melt:latest --help
+          mkdir -p /home/ubuntu/glacier-inputs/outputs
+          docker run --rm \
+            -v /home/ubuntu/glacier-inputs/datacubes:/data/datacubes \
+            -v /home/ubuntu/glacier-inputs/Glaciers:/data/Glaciers \
+            -v /home/ubuntu/glacier-inputs/outputs:/data/output \
+            ghcr.io/jsingh2344/glacier-melt:latest \
+            --datacube /data/datacubes/Kennicott_32607_S1_cube_VH_014_387.nc \
+            --output-root /data/output \
+            --rgi-root /data/Glaciers \
+            --rgi-shapefile /data/Glaciers/RGI2000-v7.0-G-01_alaska/RGI2000-v7.0-G-01_alaska.shp
