@@ -42,6 +42,8 @@ RUN mamba env create -f /hyp3-glacier-melt/environment.yml && \
     conda clean -afy && \
     conda activate hyp3-glacier-melt && \
     sed -i 's/conda activate base/conda activate hyp3-glacier-melt/g' /home/conda/.profile && \
+    rm -rf /hyp3-glacier-melt/build /hyp3-glacier-melt/dist /hyp3-glacier-melt/*.egg-info && \
+    chmod -R u+rwX /hyp3-glacier-melt && \
     python -m pip install --no-cache-dir /hyp3-glacier-melt
 
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "hyp3-glacier-melt", "python", "-m", "hyp3_glacier_melt"]
