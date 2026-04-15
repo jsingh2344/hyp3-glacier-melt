@@ -23,16 +23,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 class sar_datacube():
-    """
-    SAR Datacube for melt extent analyses
-    
-    Attributes
-    ----------
-    ds_fn : str
-        filename of the datacube
-    scene_name : str
-        name of the scene for easier referencing and naming files
-    """
+
     def __init__(self, 
                  ds_fn=str(),
                  scene_name=str(),
@@ -290,12 +281,10 @@ class sar_datacube():
         years_unique = np.unique(self.years)
         for nyear, year in enumerate(years_unique):
 
-
             # Subset dates for the given year
             year_idx = list(np.where(np.array(self.years) == year)[0])
             months_subset = [self.months[x] for x in year_idx]
             doys_subset = [self.doys[x] for x in year_idx]
-
         
             # Prevent melt/SL onset in winter months
             data_cp_year = self.data_cp[year_idx,:,:]
@@ -328,83 +317,6 @@ class sar_datacube():
         
             data_cp_year_onset_doy[data_cp_year_onset_doy==0] = np.nan
             self.melt_onset_doy_maps[year] = data_cp_year_onset_doy
-
-    def generate_snowline_post_onset_mask(self):
-        """
-        Generate a mask of shape (Time, H, W) where each pixel is 1 if:
-        - The current DOY is >= the melt onset DOY for that pixel (per year)
-        - AND the summer residual (backscatter - summer_min) exceeds the 
-            snowline threshold self.db_threshold_sl.
-
-        Output stored as: self.data_sl_post_onset
-        """
-
-        # Allocate output mask
-        T, H, W = self.data_masked.shape
-        data_sl_post_onset = np.zeros((T, H, W), dtype=float)
-        data_sl_post_onset[:] = 0   # default zero
-
-        # Precompute residuals for entire cube ------------------------------
-        summer_idx = [i for i, m in enumerate(self.months) if m in self.snowmelt_months]
-
-        # For each year, compute summer-min and residuals
-        years_unique = np.unique(self.years)
-
-        for year in years_unique:
-
-            # Indices for this year
-            year_idx = np.where(np.array(self.years) == year)[0]
-            months_subset = [self.months[i] for i in year_idx]
-
-            # Get melt onset DOY map (2D)
-            onset_map = self.melt_onset_doy_maps[year]   # shape (H, W)
-
-            # Compute summer-min for this year (same logic as pixel_analysis)
-            summer_idx_year = list(set(year_idx).intersection(summer_idx))
-            if len(summer_idx_year) == 0:
-                continue
-
-            data_summer_min_yr = nan_percentile(
-                self.data_masked[summer_idx_year, :, :],
-                q=5, axis=0
-            )
-
-            # Compute summer residual for this year
-            data_summer_res_yr = (
-                self.data_masked[year_idx, :, :] - 
-                data_summer_min_yr[np.newaxis, :, :]
-            )  # shape: (#year_frames, H, W)
-
-
-            # Loop through each timestep of the year -------------------------
-            for k, t in enumerate(year_idx):
-                
-                month_t = self.months[t]
-                # DOY of this timestep
-                doy_t = self.doys[t]
-
-                if month_t in self.months2exclude_cp:
-                    # Set everything to 0
-                    tmp = np.zeros((H, W), dtype=float)
-                    tmp[self.mask_good_pixels == 1] = 0
-                    data_sl_post_onset[t] = tmp
-                    continue
-
-                # Condition 1: DOY must be > local melt-onset DOY
-                cond_doy = doy_t > onset_map
-
-                # Condition 2: residual > SL threshold
-                cond_res = data_summer_res_yr[k] > self.db_threshold_sl
-
-                # Combine conditions
-                mask = cond_doy & cond_res & (self.mask_good_pixels == 1)
-
-                
-                data_sl_post_onset[t][:] = 0
-                data_sl_post_onset[t][mask] = 1
-
-        # Save result
-        self.data_sl_post_onset = data_sl_post_onset
 
     def annual_second_onset_map(self):
 
