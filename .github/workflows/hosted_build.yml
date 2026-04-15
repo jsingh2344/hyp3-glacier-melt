@@ -1,0 +1,27 @@
+name: Build and Push to GHCR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/glacier-melt:latest .
+
+      - name: Push image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/glacier-melt:latest
