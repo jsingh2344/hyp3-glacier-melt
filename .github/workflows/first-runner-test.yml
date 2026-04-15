@@ -1,21 +1,17 @@
-name: First runner test
+name: Docker test on remote machine
 
 on:
   workflow_dispatch:
 
 jobs:
-  hello:
+  run-container:
     runs-on: self-hosted
 
     steps:
-      - name: Print basic info
+      - name: Pull image
         run: |
-          echo "Connected to self-hosted runner"
-          echo "CPU count:"
-          nproc
-          echo
-          echo "Memory:"
-          free -h
-          echo
-          echo "Docker:"
-          docker --version
+          docker pull ghcr.io/jsingh2344/glacier-melt:latest
+
+      - name: Test container (safe)
+        run: |
+          docker run --rm ghcr.io/jsingh2344/glacier-melt:latest --help
