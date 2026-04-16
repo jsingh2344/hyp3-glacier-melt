@@ -784,7 +784,6 @@ class sar_datacube():
             area_bin_size = min(area_bin_size, 2e6) # maximum of 2 km2 bins
             self.area_bin_size = area_bin_size
 
-            print(area_bin_size, self.xres, self.yres, type(area_bin_size))
     
         assert self.area_bin_size % (self.xres * self.yres) == 0, f'`area_bin_size` is an area not compatible with DEM resolution ({self.xres} m)'
         
