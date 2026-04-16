@@ -3,11 +3,22 @@ name: Real glacier run
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   run-container:
     runs-on: self-hosted
 
     steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Pull image
         run: |
           docker pull ghcr.io/jsingh2344/glacier-melt-local:latest
