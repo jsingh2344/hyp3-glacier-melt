@@ -101,8 +101,8 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
             #traceback.print_exc()
             continue
         
-        if verbose: 
-            print("Glaciers in tile:", main_glac_rgi.rgino_str.values)
+        #if verbose: 
+        print("Glaciers in tile:", main_glac_rgi.rgino_str.values)
         # if '01.05589' not in main_glac_rgi.rgino_str.values:
         #     continue
     
@@ -140,7 +140,6 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
             dc.single_glacier_preprocess(glacno=glacno, area_km2=area_km2)
 
             #dc.plot_pixel_timeseries(glacno, 195, 75)
-            print("generating elevs")
             dc.generate_elevs_from_onsets(glacno, paths.csv_dir, 
                                             doy_step=10,
                                             percentile=1.0,
