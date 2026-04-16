@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Pull image
         run: |
-          docker pull ghcr.io/jsingh2344/glacier-melt:latest
+          docker pull ghcr.io/jsingh2344/glacier-melt-local:latest
 
       - name: Run glacier pipeline
         run: |
@@ -19,7 +19,7 @@ jobs:
             -v /home/ubuntu/glacier-inputs/datacubes:/data/datacubes \
             -v /home/ubuntu/glacier-inputs/Glaciers:/data/Glaciers \
             -v /home/ubuntu/glacier-inputs/outputs:/data/output \
-            ghcr.io/jsingh2344/glacier-melt:latest \
+            ghcr.io/jsingh2344/glacier-melt-local:latest \
             --datacube /data/datacubes/Kennicott_32607_S1_cube_VH_014_387.nc \
             --output-root /data/output \
             --rgi-root /data/Glaciers \
