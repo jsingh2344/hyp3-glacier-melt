@@ -3,6 +3,10 @@ name: Build and Push to GHCR
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: self-hosted
