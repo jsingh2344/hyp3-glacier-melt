@@ -22,9 +22,9 @@ import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
-class sar_datacube:
-    
-    def __init__(self,
+class sar_datacube():
+
+    def __init__(self, 
                  ds_fn=str(),
                  scene_name=str(),
                  rgi_reg=1,
@@ -37,52 +37,53 @@ class sar_datacube:
                  winter_months=[1,2],
                  snowmelt_months=[4,5,6,7],
                  months2exclude_cp=[10, 11, 12, 1, 2],
-                 winter_std_threshold=3,
+                 winter_std_threshold=3, # maximum winter standard deviation [dB]
                  bin_size=20,
                  area_bin_size=100000,
                  allmelt_threshold=0.9,
                  allmelt_pixels=10,
-                 nan_filter=-1e10,
-                 min_area_frac=0.9,
-                 subset_y=None,
-                 subset_x=None,
-                 rgi_cols_drop=None,
-                 paths=None):
-        
+                 nan_filter=-1e10, # value below which you can threshold for nan data
+                 min_area_frac=0.9, # minimum fraction of the total area that has data to be included
+                 subset_y = slice(500, 1000),
+                 subset_x = slice(500, 1000),
+                 rgi_cols_drop = None,
+                 paths=None
+                 ):
+        """
+        Add attributes
+        """
         self.ds_fn = ds_fn
         self.scene_name = scene_name
         self.rgi_reg = rgi_reg
         self.paths = paths
         self.rgi_cols_drop = rgi_cols_drop
 
+        # Load xarray dataset
         ds = xr.open_dataset(
             self.ds_fn,
-            chunks={'x': 500, 'y': 500}
+            chunks={'x': 500, 'y': 500}   # all 226 timesteps kept in each chunk
         )
-
-        if subset_y is None:
-            subset_y = slice(None)
-        if subset_x is None:
-            subset_x = slice(None)
-
         self.ds = ds.isel(y=subset_y, x=subset_x)
-
-        self.data = self.ds.images.values
-        if nan_filter is not None:
+        
+        
+        self.data = (ds.images.isel(y=subset_y, x=subset_x)).values
+        if not nan_filter is None:
             self.data[self.data < nan_filter] = np.nan
-
         mask_good_pixels = np.sum(self.data, axis=0)
         mask_good_pixels[~np.isnan(mask_good_pixels)] = 1
         self.mask_good_pixels = mask_good_pixels
-        self.data_good = self.data * self.mask_good_pixels[np.newaxis, :, :]
-
+        self.data_good = self.data * self.mask_good_pixels[np.newaxis,:,:]
+        
         self.dates = self.ds.time.values
-        self.mask_values = self.ds.rgi_ind_glacier_mask.values
-        self.dem = self.ds.dem.values
 
+        #self.mask_values = self.ds.rgi_ind_glacier_mask.values
+        self.mask_values = (ds.rgi_ind_glacier_mask.isel(y=subset_y, x=subset_x)).values
+        self.dem = self.ds.dem.values
+        self.dem = (ds.dem.isel(y=subset_y, x=subset_x)).values
         self.xres = xres
         self.yres = yres
 
+        # Single Glacier Dictionary initialization
         self.glac_bounds = {}
         self.glac_mask = {}
         self.glac_mask_good_pixels = {}
@@ -109,21 +110,24 @@ class sar_datacube:
         self.glac_snowline_areas_percentiles = {}
         self.glac_snowline_areas_percentile_mins = {}
         self.glac_snowline_areas_percentile_maxs = {}
+        
 
+        # Attributes
         self.min_glac_area_km2 = min_glac_area_km2
-        self.db_threshold = db_threshold
-        self.db_threshold_sl = db_threshold_sl
-        self.zscore_threshold = zscore_threshold
-        self.winter_months = winter_months
-        self.snowmelt_months = snowmelt_months
-        self.months2exclude_cp = months2exclude_cp
-        self.winter_std_threshold = winter_std_threshold
+        self.db_threshold=db_threshold
+        self.db_threshold_sl=db_threshold_sl
+        self.zscore_threshold=zscore_threshold
+        self.winter_months=winter_months
+        self.snowmelt_months=snowmelt_months
+        self.months2exclude_cp=months2exclude_cp
+        self.winter_std_threshold=winter_std_threshold
 
         self.bin_size = bin_size
         self.area_bin_size = area_bin_size
-        self.allmelt_threshold = allmelt_threshold
+        self.allmelt_threshold = allmelt_threshold,
         self.allmelt_pixels = allmelt_pixels
         self.min_area_frac = min_area_frac
+    
                
     def glacnos_to_process(self):
         """
