@@ -24,8 +24,8 @@ jobs:
 
       - name: Build image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/glacier-melt-test:latest .
+          docker build -t ghcr.io/${{ github.repository_owner }}/glacier-melt:latest .
 
       - name: Push image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/glacier-melt-test:latest
+          docker push ghcr.io/${{ github.repository_owner }}/glacier-melt:latest
