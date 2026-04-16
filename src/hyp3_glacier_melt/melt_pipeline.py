@@ -116,7 +116,6 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         dc.annual_snowline_post_onset_map()
         dc.annual_snowline_onset_map() 
         dc.annual_second_onset_map()
-        dc.annual_snowline_second_onset_map()
         
         # SINGLE GLACIER ANALYSIS
         for nglac, glacno in enumerate(
