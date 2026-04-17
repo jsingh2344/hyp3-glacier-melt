@@ -38,7 +38,6 @@ class DatacubeBuildConfig:
     yres: float = 100.0
     frame_buffer: int = 1
 
-    
 
     include_dem: bool = True
     rtc_resolution: int = 30
@@ -74,6 +73,7 @@ def read_band_as_array(ds, label: str):
     log.info("%s max: %s", label, np.nanmax(arr))
 
     return arr, nodata
+
 def derive_projwin_and_epsg_from_dems(dem_datasets):
     """
     Replicate the notebook's projWin logic from a list of GDAL DEM datasets.
@@ -86,8 +86,6 @@ def derive_projwin_and_epsg_from_dems(dem_datasets):
         (min_x, min_y, max_x, max_y)
     epsg_str_for_cube : str
     """
-    from osgeo import osr
-    import numpy as np
 
     min_xs, max_xs, min_ys, max_ys = [], [], [], []
 
@@ -672,7 +670,6 @@ def build_rgi_mask_from_shapefile(
     Rasterize the RGI shapefile onto the current raster grid using an integer
     glacier ID field derived from rgi_id, producing a uint32 glacier mask.
     """
-    from osgeo import ogr, osr, gdal
 
     shp = ogr.Open(str(rgi_shapefile), update=1)
     if shp is None:
@@ -826,7 +823,6 @@ def get_output_bounds_in_target_crs(src_ds, epsg_str: str) -> tuple[float, float
     Compute dataset bounds in the target CRS without hardcoding them.
     Returns bounds as (min_x, min_y, max_x, max_y).
     """
-    from osgeo import gdal
 
     vrt = gdal.Warp(
         "",

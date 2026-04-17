@@ -112,7 +112,6 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         # PIXEL-BY-PIXEL ANALYSIS
         dc.pixel_analysis()
         dc.annual_melt_onset_map()
-        #dc.generate_snowline_post_onset_mask()
         dc.annual_snowline_post_onset_map()
         dc.annual_snowline_onset_map() 
         dc.annual_second_onset_map()
