@@ -95,10 +95,10 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         try:
             main_glac_rgi = dc.glacnos_to_process()
         except Exception as e:
-            #import traceback
-            #print("glacnos_to_process failed")
+            import traceback
+            print("glacnos_to_process failed")
             print(f"tile y[{y0}:{y1}], x[{x0}:{x1}]")
-            #traceback.print_exc()
+            traceback.print_exc()
             continue
         
         #if verbose: 
