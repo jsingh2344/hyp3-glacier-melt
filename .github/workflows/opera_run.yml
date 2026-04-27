@@ -1,0 +1,74 @@
+name: OPERA run
+
+on:
+  workflow_dispatch:
+    inputs:
+      opera_burst_id:
+        description: "OPERA burst ID to build/process"
+        required: true
+        default: "T014_028627_IW2"
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  run-container:
+    runs-on: self-hosted
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: |
+          docker pull ghcr.io/jsingh2344/glacier-melt-local:latest
+
+      - name: Verify input folders
+        run: |
+          ls -lh /home/ubuntu/glacier-inputs || true
+          ls -lh /home/ubuntu/glacier-inputs/DEM
+          ls -lh /home/ubuntu/glacier-inputs/Glaciers/RGI2000-v7.0-G-01_alaska/RGI2000-v7.0-G-01_alaska.shp
+
+      - name: Run glacier pipeline
+        run: |
+          mkdir -p /home/ubuntu/glacier-inputs/opera
+          mkdir -p /home/ubuntu/glacier-inputs/datacubes
+          mkdir -p /home/ubuntu/glacier-inputs/outputs
+
+          docker run --rm \
+            -e EARTHDATA_USERNAME="${{ secrets.EARTHDATA_USERNAME }}" \
+            -e EARTHDATA_PASSWORD="${{ secrets.EARTHDATA_PASSWORD }}" \
+            -v /home/ubuntu/glacier-inputs/opera:/data/opera \
+            -v /home/ubuntu/glacier-inputs/datacubes:/data/datacubes \
+            -v /home/ubuntu/glacier-inputs/DEM:/data/DEM \
+            -v /home/ubuntu/glacier-inputs/Glaciers:/data/Glaciers \
+            -v /home/ubuntu/glacier-inputs/outputs:/data/output \
+            ghcr.io/jsingh2344/glacier-melt-local:latest \
+            --opera-burst-id "${{ github.event.inputs.opera_burst_id }}" \
+            --opera-input-dir /data/opera \
+            --opera-dem /data/DEM/dem.tif \
+            --opera-output-dir /data/datacubes \
+            --output-root /data/output \
+            --rgi-root /data/Glaciers \
+            --rgi-shapefile /data/Glaciers/RGI2000-v7.0-G-01_alaska/RGI2000-v7.0-G-01_alaska.shp
+
+      - name: Show outputs
+        if: always()
+        run: |
+          echo "Datacubes:"
+          ls -lh /home/ubuntu/glacier-inputs/datacubes || true
+
+          echo "Outputs:"
+          find /home/ubuntu/glacier-inputs/outputs -maxdepth 3 -type f | head -100 || true
+
+      - name: Fix output ownership
+        if: always()
+        run: |
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/glacier-inputs/outputs || true
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/glacier-inputs/datacubes || true
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/glacier-inputs/opera || true
