@@ -33,9 +33,8 @@ class MeltConfig:
     # Runtime mode
     build_datacube = False
     build_opera_datacube = True
-    download_opera_files = False
-    build_only = True
-    build_only: bool = False
+    download_opera_files = True
+    build_only = False
     dry_run: bool = False
 
     # OPERA acquisition settings
