@@ -1,6 +1,8 @@
 import math
 import re
+import os
 from pathlib import Path
+import warnings
 
 import numpy as np
 from netCDF4 import Dataset
@@ -8,31 +10,56 @@ from osgeo import gdal, ogr, osr
 from tqdm import tqdm
 
 gdal.UseExceptions()
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+np.seterr(all="ignore")
 
 # ============================================================
 # USER INPUTS
 # ============================================================
 
-FILE_LIST_TXT = Path(r"C:\Users\jaden\Downloads\OPERA\file_list.txt")
-LOCATION_STR = "05255"
-DEM_PATH = Path(r"C:\Users\jaden\Downloads\OPERA\dem.tif")
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+OPERA_BURST_DIR = SCRIPT_DIR / "opera_burst_files"
+
+DEM_PATH = SCRIPT_DIR / "dem.tif"
+OUT_DIR = SCRIPT_DIR / "output_nc"
+
+WRITE_DB = True
+
+# You still need this, because your shown folder structure does not include the RGI shapefile.
 RGI_SHAPEFILE_PATH = Path(
     r"C:\Users\jaden\Downloads\Research\Glaciers\RGI2000-v7.0-G-01_alaska\RGI2000-v7.0-G-01_alaska.shp"
 )
-OUT_DIR = Path(r"D:\opera_nc")
+
+POLARIZATION = "VH"
 
 XRES = 100.0
 YRES = 100.0
 RESAMPLE_ALG = "average"
 OVERWRITE = True
 
-# Key compatibility fix: add buffer around OPERA scene footprint
-BUFFER_M = 2000.0
-
 # ============================================================
 # HELPERS
 # ============================================================
 
+def convert_backscatter(arr, nodata_value=None, write_db=True):
+    arr = arr.astype(np.float32, copy=True)
+
+    if nodata_value is None:
+        invalid = ~np.isfinite(arr)
+    else:
+        invalid = (~np.isfinite(arr)) | (arr == nodata_value)
+
+    if write_db:
+        # dB = 10 * log10(linear power)
+        positive = (~invalid) & (arr > 0)
+        out = np.full(arr.shape, np.nan, dtype=np.float32)
+        out[positive] = 10.0 * np.log10(arr[positive])
+        return out
+
+    # keep linear scale, but normalize invalid values to NaN
+    arr[invalid] = np.nan
+    return arr
 
 def return_epsg_str_from_gdal_image(in_gd_img):
     img_srs = in_gd_img.GetSpatialRef()
@@ -46,17 +73,29 @@ def return_epsg_str_from_gdal_image(in_gd_img):
     return f"{img_srs_dict['id']['authority']}:{img_srs_dict['id']['code']}"
 
 
-def parse_input_paths(txt_path: Path):
-    raw = txt_path.read_text(encoding="utf-8", errors="ignore")
+def parse_input_paths(opera_burst_dir: Path):
+    """
+    Scan opera_burst_dir for local OPERA GeoTIFFs.
 
-    quoted_paths = re.findall(r'"([^"]+)"', raw)
-    paths = [Path(p) for p in quoted_paths]
+    Expected:
+      opera_burst_dir/
+        OPERA_L2_RTC-S1_..._VH.tif
+        OPERA_L2_RTC-S1_..._VH.tif
+        ...
 
-    tif_paths = [p for p in paths if p.suffix.lower() == ".tif"]
-    dem_candidates = [p for p in tif_paths if p.name.lower() == "dem.tif"]
-    sar_paths = [p for p in tif_paths if p.name.lower() != "dem.tif"]
+    DEM is handled separately through DEM_PATH, not from this folder.
+    """
+    if not opera_burst_dir.exists():
+        raise FileNotFoundError(f"Could not find OPERA burst directory: {opera_burst_dir}")
 
-    return dem_candidates, sar_paths
+    tif_paths = list(opera_burst_dir.rglob("*.tif")) + list(opera_burst_dir.rglob("*.tiff"))
+
+    sar_paths = [
+        p for p in tif_paths
+        if re.search(rf"_{POLARIZATION}\.tiff?$", p.name, flags=re.IGNORECASE)
+    ]
+
+    return [], sort_paths_stably(sar_paths)
 
 
 def extract_date_from_filename(path: Path):
@@ -66,17 +105,15 @@ def extract_date_from_filename(path: Path):
     return m.group(1)
 
 
-def extract_path_frame_from_filename(path: Path):
-    m = re.search(r"_T(\d+)-(\d+)-IW", path.name)
+def extract_opera_burst_id_from_filename(path: Path):
+    m = re.search(r"_(T\d+[-_]\d+[-_]IW\d)_", path.name, flags=re.IGNORECASE)
     if m is None:
-        return "unknown", "unknown"
-    path_no = str(int(m.group(1)))
-    frame_no = m.group(2)
-    return path_no, frame_no
+        raise ValueError(f"Could not extract OPERA burst ID from filename: {path.name}")
 
+    return m.group(1).upper().replace("_", "-")
 
 def extract_pol_from_filename(path: Path):
-    m = re.search(r"_([Vv][Vv]|[Vv][Hh])\.tif$", path.name)
+    m = re.search(r"_([Vv][Vv]|[Vv][Hh]|[Hh][Hh]|[Hh][Vv])\.tiff?$", path.name)
     if m is None:
         raise ValueError(f"Could not extract polarization from filename: {path.name}")
     return m.group(1).upper()
@@ -141,23 +178,33 @@ def transform_bounds(bounds, src_epsg_str, dst_epsg_str):
     return (min(out_x), min(out_y), max(out_x), max(out_y))
 
 
-def snap_bounds_to_grid(bounds, xres, yres):
+def snap_bounds_to_grid(bounds, xres, yres, mode="outer"):
     min_x, min_y, max_x, max_y = bounds
-    min_x = math.floor(min_x / xres) * xres
-    min_y = math.floor(min_y / yres) * yres
-    max_x = math.ceil(max_x / xres) * xres
-    max_y = math.ceil(max_y / yres) * yres
+
+    if mode == "outer":
+        # Expands bounds outward: good for union
+        min_x = math.floor(min_x / xres) * xres
+        min_y = math.floor(min_y / yres) * yres
+        max_x = math.ceil(max_x / xres) * xres
+        max_y = math.ceil(max_y / yres) * yres
+
+    elif mode == "inner":
+        # Shrinks bounds inward: good for intersection
+        min_x = math.ceil(min_x / xres) * xres
+        min_y = math.ceil(min_y / yres) * yres
+        max_x = math.floor(max_x / xres) * xres
+        max_y = math.floor(max_y / yres) * yres
+
+    else:
+        raise ValueError(f"Unknown snap mode: {mode}")
+
+    if min_x >= max_x or min_y >= max_y:
+        raise ValueError(
+            f"Snapped bounds are empty: {[min_x, min_y, max_x, max_y]}. "
+            "Your rasters may not share a common overlap."
+        )
+
     return [min_x, min_y, max_x, max_y]
-
-
-def buffer_bounds(bounds, buffer_m):
-    min_x, min_y, max_x, max_y = bounds
-    return [
-        min_x - buffer_m,
-        min_y - buffer_m,
-        max_x + buffer_m,
-        max_y + buffer_m,
-    ]
 
 
 def output_bounds_to_projwin(output_bounds):
@@ -179,12 +226,19 @@ def get_output_bounds_from_sar_scenes(sar_paths, epsg_str_for_cube, xres, yres):
         scene_bounds.append(bounds)
         ds = None
 
-    min_x = min(b[0] for b in scene_bounds)
-    min_y = min(b[1] for b in scene_bounds)
-    max_x = max(b[2] for b in scene_bounds)
-    max_y = max(b[3] for b in scene_bounds)
+    # INTERSECTION, not union
+    min_x = max(b[0] for b in scene_bounds)
+    min_y = max(b[1] for b in scene_bounds)
+    max_x = min(b[2] for b in scene_bounds)
+    max_y = min(b[3] for b in scene_bounds)
 
-    return snap_bounds_to_grid((min_x, min_y, max_x, max_y), xres, yres)
+    if min_x >= max_x or min_y >= max_y:
+        raise ValueError(
+            "SAR scenes do not have a common intersection. "
+            f"Intersection bounds before snapping: {(min_x, min_y, max_x, max_y)}"
+        )
+
+    return snap_bounds_to_grid((min_x, min_y, max_x, max_y), xres, yres, mode="inner")
 
 
 def add_rgi_int_field(mem_vector_ds):
@@ -321,14 +375,49 @@ def merge_same_date_arrays(arrays, nodata_value):
 # MAIN
 # ============================================================
 
-def main():
-    if not FILE_LIST_TXT.exists():
-        raise FileNotFoundError(f"Input text file not found: {FILE_LIST_TXT}")
+def generate_opera_cube(
+    opera_input_dir,
+    dem_path,
+    rgi_shapefile_path,
+    out_dir,
+    polarization="VH",
+    xres=100.0,
+    yres=100.0,
+    resample_alg="average",
+    write_db=True,
+    overwrite=True,
+):
+    global OPERA_BURST_DIR
+    global DEM_PATH
+    global RGI_SHAPEFILE_PATH
+    global OUT_DIR
+    global POLARIZATION
+    global XRES
+    global YRES
+    global RESAMPLE_ALG
+    global WRITE_DB
+    global OVERWRITE
 
+    OPERA_BURST_DIR = Path(opera_input_dir)
+    DEM_PATH = Path(dem_path)
+    RGI_SHAPEFILE_PATH = Path(rgi_shapefile_path)
+    OUT_DIR = Path(out_dir)
+
+    POLARIZATION = polarization
+    XRES = float(xres)
+    YRES = float(yres)
+    RESAMPLE_ALG = resample_alg
+    WRITE_DB = bool(write_db)
+    OVERWRITE = bool(overwrite)
+
+    return run_generate_opera_cube()
+
+
+def run_generate_opera_cube():
     out_dir = OUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    listed_dem_candidates, sar_paths = parse_input_paths(FILE_LIST_TXT)
+    listed_dem_candidates, sar_paths = parse_input_paths(OPERA_BURST_DIR)
 
     if DEM_PATH.exists():
         dem_path = DEM_PATH
@@ -336,16 +425,18 @@ def main():
         dem_path = listed_dem_candidates[0]
     else:
         raise FileNotFoundError(
-            "Could not find dem.tif. Set DEM_PATH explicitly or include it in FILE_LIST_TXT."
+            f"Could not find DEM. Expected {DEM_PATH}, or dem.tif inside {OPERA_BURST_DIR}."
         )
 
     sar_paths = [p for p in sar_paths if p.exists()]
     if len(sar_paths) == 0:
-        raise RuntimeError("No existing SAR .tif files found from the provided file list.")
+        raise RuntimeError(
+            f"No existing OPERA {POLARIZATION} SAR .tif files found in {OPERA_BURST_DIR} "
+        )
 
     sar_paths = sort_paths_stably(sar_paths)
 
-    path_no, frame_no = extract_path_frame_from_filename(sar_paths[0])
+    opera_burst_id = extract_opera_burst_id_from_filename(sar_paths[0])
     pol_str = extract_pol_from_filename(sar_paths[0])
 
     sar_ref_ds = gdal.Open(str(sar_paths[0]))
@@ -355,17 +446,15 @@ def main():
     epsg_str_for_cube = return_epsg_str_from_gdal_image(sar_ref_ds)
     sar_ref_ds = None
 
-    scene_bounds = get_output_bounds_from_sar_scenes(
+    output_bounds = get_output_bounds_from_sar_scenes(
         sar_paths=sar_paths,
         epsg_str_for_cube=epsg_str_for_cube,
         xres=XRES,
         yres=YRES,
     )
-    output_bounds = buffer_bounds(scene_bounds, BUFFER_M)
-    output_bounds = snap_bounds_to_grid(output_bounds, XRES, YRES)
     projwin = output_bounds_to_projwin(output_bounds)
 
-    out_nc_filename = out_dir / f"{LOCATION_STR}_{epsg_str_for_cube.split(':')[-1]}_S1_cube_{pol_str}_{path_no}_{frame_no}.nc"
+    out_nc_filename = out_dir / f"{epsg_str_for_cube.split(':')[-1]}_S1_cube_{pol_str}_{opera_burst_id}.nc"
     tmp_nc = out_nc_filename.with_name(out_nc_filename.stem + "_partial.nc")
 
     if out_nc_filename.exists():
@@ -382,9 +471,9 @@ def main():
     print(f"SAR files found: {len(sar_paths)}")
     print(f"Polarization: {pol_str}")
     print(f"EPSG for cube: {epsg_str_for_cube}")
-    print(f"Scene bounds: {scene_bounds}")
-    print(f"Buffered outputBounds: {output_bounds}")
-    print(f"projWin: {projwin}")
+    print(f"OPERA burst ID: {opera_burst_id}")
+    print(f"projWin (from scenes): {projwin}")
+    print(f"outputBounds (from scenes): {output_bounds}")
     print(f"Output netCDF: {out_nc_filename}")
 
     indate_and_tifs = {}
@@ -414,7 +503,18 @@ def main():
         YRES,
         RESAMPLE_ALG,
     )
-    full_dem_sm = sub_gd_dem.ReadAsArray().astype(np.float32)
+    DEM_NODATA = np.int16(-32768)
+
+    dem_arr = sub_gd_dem.ReadAsArray().astype(np.float32)
+
+    # Preserve invalid pixels before converting to integer
+    dem_invalid = ~np.isfinite(dem_arr)
+
+    # Round to nearest meter and convert to integer
+    full_dem_sm = np.rint(dem_arr).astype(np.int16)
+
+    # Set invalid pixels to integer nodata
+    full_dem_sm[dem_invalid] = DEM_NODATA
 
     gt = sub_gd_dem.GetGeoTransform()
     min_x, pix_x_m, _, max_y, _, pix_y_m = gt
@@ -455,11 +555,11 @@ def main():
         )
         v_dem = root.createVariable(
             "dem",
-            "f4",
+            "i2",
             ("y", "x"),
             zlib=True,
             complevel=2,
-            fill_value=np.nan,
+            fill_value=DEM_NODATA,
         )
         v_rgi = root.createVariable(
             "rgi_ind_glacier_mask",
@@ -522,6 +622,11 @@ def main():
             sub_gd_imgs = None
 
             full_img_sm = merge_same_date_arrays(img_sms, img_nodata_val).astype(np.float32)
+            full_img_sm = convert_backscatter(
+                full_img_sm,
+                nodata_value=img_nodata_val,
+                write_db=WRITE_DB,
+            )
             v_images[framecount, :, :] = full_img_sm
 
             if framecount % 10 == 0:
@@ -536,6 +641,8 @@ def main():
         print("\nDone.")
         print(f"Saved: {out_nc_filename}")
         print(f"Cube shape: time={num_dates}, y={ny}, x={nx}")
+
+        return out_nc_filename
 
     except Exception:
         if root is not None:
@@ -552,4 +659,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_generate_opera_cube()
