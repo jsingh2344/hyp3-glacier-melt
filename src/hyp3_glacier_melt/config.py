@@ -29,3 +29,23 @@ class MeltConfig:
     path_frame_dict = {'14': ['387']}
     path_direction = 'Ascending'
     frame_cut = 0
+
+    # Runtime mode
+    build_datacube = False
+    build_opera_datacube = True
+    download_opera_files = False
+    build_only = True
+    build_only: bool = False
+    dry_run: bool = False
+
+    # OPERA acquisition settings
+    opera_burst_id: str = "T014_028627_IW2"
+    opera_start: str = "2017-01-01"
+    opera_end: str = "2024-12-31"
+    opera_download_processes: int = 1
+    opera_overwrite_downloads: bool = False
+
+    # OPERA cube build settings
+    opera_resample_alg: str = "average"
+    opera_write_db: bool = True
+    opera_overwrite_cube: bool = True

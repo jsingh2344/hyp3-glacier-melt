@@ -20,6 +20,11 @@ import os
 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings(
+    "ignore",
+    message=r"The specified chunks separate the stored chunks.*",
+    category=UserWarning,
+)
 
 
 class sar_datacube():
@@ -159,7 +164,8 @@ class sar_datacube():
                         list(np.unique(self.mask_values[:,0])) + 
                         list(np.unique(self.mask_values[:,-1])))
         glacno_edges = list(np.unique(np.array(glacno_edges)))
-        glacno_edges.remove(0)
+        if 0 in glacno_edges:
+            glacno_edges.remove(0)
         glacnos = [x for x in glacnos_raw if x not in glacno_edges]
         glac_idxs = [glacnos_raw.index(x) for x in glacnos]
         main_glac_rgi = main_glac_rgi_raw.loc[glac_idxs]
