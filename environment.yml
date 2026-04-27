@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - asf_search
   - python>=3.10
   - pip
   - rasterio
