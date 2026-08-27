@@ -7,9 +7,9 @@ class MeltConfig:
     min_glac_area_km2=2
     db_threshold = -3
     db_threshold_sl = 4
-    zscore_threshold = -2
+    zscore_threshold = -2 #same as prev
     winter_months = [1, 2]
-    snowmelt_months = [4, 5, 6, 7]
+    snowmelt_months = [4, 5, 6, 7] #same as prev
     months2exclude_cp = [10, 11, 12, 1, 2]
     winter_std_threshold = 3
     xres = 100.0
@@ -22,6 +22,9 @@ class MeltConfig:
     min_area_frac = 0.9
     subset_y = (500, 1000)
     subset_x = (500, 1000)
+    use_spatial_tiling = True #Setting to false could load many many GBs into RAM!
+    tile_y = 500
+    tile_x = 500
     rgi_cols_drop = ['glims_id', 'anlys_id', 'subm_id']
     pol_str = 'VH'
     scene_name = 'Kennicott-Cordoba'

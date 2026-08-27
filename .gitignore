@@ -249,3 +249,9 @@ hyp3_cache/
 *.tif
 *.zip
 Glaciers/
+
+# Local plotting utilities
+utility/
+
+# macOS metadata
+.DS_Store

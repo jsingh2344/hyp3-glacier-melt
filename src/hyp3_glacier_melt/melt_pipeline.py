@@ -12,7 +12,6 @@ from datetime import date, timedelta
 from scipy.ndimage import convolve, convolve1d
 from rasterio.transform import Affine
 from numpy.lib.stride_tricks import sliding_window_view
-from netCDF4 import Dataset
 import os
 
 from hyp3_glacier_melt.config import MeltConfig
@@ -20,6 +19,7 @@ from hyp3_glacier_melt.paths import MeltPaths
 from hyp3_glacier_melt.datacube import sar_datacube
 from hyp3_glacier_melt.rgi import selectglaciersrgitable
 from hyp3_glacier_melt.utils import nan_percentile, DescStr, _zvalue_from_index
+from hyp3_glacier_melt.product import MeltRunResult
 
 log = logging.getLogger(__name__)
 
@@ -45,24 +45,42 @@ class DescStr:
     def flush(self):
         pass
 
-def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False):
+def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False) -> MeltRunResult:
     # Process Datasets
-    failed_glacnos = []
+    failed_glacnos: dict[int, str] = {}
+    generated_csv_files: list[Path] = []
     ds_fn = datacube_path
     # Path/Row string used for filenames
     pathrow_str = str(ds_fn).split('.nc')[0].split(config.pol_str)[1][1:]
 
     with xr.open_dataset(ds_fn) as tmp_ds:
-            ny = tmp_ds.sizes['y']
-            nx = tmp_ds.sizes['x']
+        nt = tmp_ds.sizes['time']
+        ny = tmp_ds.sizes['y']
+        nx = tmp_ds.sizes['x']
+        image_itemsize = tmp_ds['images'].dtype.itemsize
 
     print("PIPELINE OPENED:", ds_fn)
     print("PIPELINE SHAPE:", ny, nx)
 
-    tile_y, tile_x = 500, 500
+    if config.use_spatial_tiling:
+        spatial_subsets = generate_spatial_subsets(
+            ny,
+            nx,
+            tile_y=config.tile_y,
+            tile_x=config.tile_x,
+        )
+    else:
+        raw_images_gib = nt * ny * nx * image_itemsize / 1024**3
+        log.warning(
+            'Spatial tiling is disabled. Processing the full %sx%s cube at once; '
+            'the raw images array alone is approximately %.2f GiB and working arrays require additional memory.',
+            ny,
+            nx,
+            raw_images_gib,
+        )
+        spatial_subsets = [(slice(0, ny), slice(0, nx), 0, ny, 0, nx)]
 
-    for subset_y, subset_x, y0, y1, x0, x1 in tqdm(generate_spatial_subsets(
-        ny, nx, tile_y=tile_y, tile_x=tile_x)):
+    for subset_y, subset_x, y0, y1, x0, x1 in tqdm(spatial_subsets):
 
     #for subset_y, subset_x, y0, y1, x0, x1 in [(slice(500, 1000), slice(1500, 2000), -1, -1, -1, -1)]: #5589!
 
@@ -94,11 +112,24 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         # Load glaciers to process
         try:
             main_glac_rgi = dc.glacnos_to_process()
-        except Exception as e:
-            import traceback
-            print("glacnos_to_process failed")
-            print(f"tile y[{y0}:{y1}], x[{x0}:{x1}]")
-            traceback.print_exc()
+        except Exception:
+            log.exception(
+                "glacnos_to_process failed for tile y[%s:%s], x[%s:%s]",
+                y0,
+                y1,
+                x0,
+                x1,
+            )
+            continue
+
+        if main_glac_rgi.empty:
+            log.info(
+                "No suitable glaciers for tile y[%s:%s], x[%s:%s]; skipping",
+                y0,
+                y1,
+                x0,
+                x1,
+            )
             continue
         
         #if verbose: 
@@ -115,7 +146,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         dc.annual_snowline_post_onset_map()
         dc.annual_snowline_onset_map() 
         dc.annual_second_onset_map()
-        
+
         # SINGLE GLACIER ANALYSIS
         for nglac, glacno in enumerate(
             tqdm(
@@ -132,24 +163,30 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
             rgino_str = main_glac_rgi.loc[nidx,'rgino_str']
             area_km2 = main_glac_rgi.loc[nidx,'area_km2']
     
-            #try:
-            # Process individual glacier
-            
-            dc.area_bin_size = config.area_bin_size
-            dc.single_glacier_preprocess(glacno=glacno, area_km2=area_km2)
+            try:
+                # Process individual glacier
 
-            #dc.plot_pixel_timeseries(glacno, 195, 75)
-            dc.generate_elevs_from_onsets(glacno, paths.csv_dir, 
-                                            doy_step=10,
-                                            percentile=1.0,
-                                            min_valid_frac=0.01,
-                                            plot_year=2024
-                                            )
-            #dc.plot_melt_onset_maps(glacno, out_dir=paths.onset_dir)
-            #except:
-            failed_glacnos.append(glacno)
+                dc.area_bin_size = config.area_bin_size
+                dc.single_glacier_preprocess(glacno=glacno, area_km2=area_km2)
+
+                #dc.plot_pixel_timeseries(glacno, 195, 75)
+                csv_file = dc.generate_elevs_from_onsets(glacno, paths.csv_dir,
+                                                doy_step=10,
+                                                percentile=1.0,
+                                                min_valid_frac=0.01,
+                                                plot_year=2024
+                                                )
+                generated_csv_files.append(csv_file)
+                #dc.plot_melt_onset_maps(glacno, out_dir=paths.onset_dir)
+            except Exception as exc:
+                log.exception("Processing failed for glacier %s", glacno)
+                failed_glacnos[int(glacno)] = f"{type(exc).__name__}: {exc}"
         
-    return len(Dataset(datacube_path, mode="r").variables["time"]), failed_glacnos
+    return MeltRunResult(
+        scenes=nt,
+        csv_files=generated_csv_files,
+        failed_glacnos=failed_glacnos,
+    )
 
 
 def run_melt_pipeline(datacube_path, config, paths):
@@ -159,10 +196,8 @@ def run_melt_pipeline(datacube_path, config, paths):
     os.makedirs(paths.csv_dir, exist_ok=True)
     os.makedirs(paths.onset_dir, exist_ok=True)
 
-    scenes_no, failed_glacnos = process_datacube_to_melt_extent(datacube_path=datacube_path, config=config, paths=paths)
-
-    output_file = Path(paths.output_root) / "datacube_summary.txt"
-    output_file.write_text(
-        f"scenes={scenes_no}\nfailed_glacnos={failed_glacnos}\n"
+    return process_datacube_to_melt_extent(
+        datacube_path=datacube_path,
+        config=config,
+        paths=paths,
     )
-    return output_file

@@ -8,10 +8,10 @@ At each Sentinel-1 acquisition date, Wells et al. (2026) computes melt extents a
 
 ### Onset map and mask generation
 
-To calculate melt extents, we produce three spatially-distributed onset maps for each summer: a melt onset map, an ice onset map, and a second melt onset map (Fig. 1). Each map stores, for every pixel on a glacier, the earliest day of year (DOY) at which a given condition (melt, second melt, or ice) is met. 
-- The melt condition is triggered when a pixel drops more than 3 dB below its winter (January and February) mean (Figs. 2 and 3).
+To calculate melt extents, we produce three spatially-distributed onset maps for each summer: a melt onset map, an ice onset map, and a second melt onset map (Fig. 1). Each map stores, for every pixel on a glacier, the earliest day of year (DOY) at which a given condition (melt, second melt, or ice) is met. DOY follows the standard one-based calendar convention: January 1 is DOY 1, and December 31 is DOY 365 (or 366 in a leap year).
+- The melt condition is triggered when a pixel drops more than 3 dB below its winter (January and February) mean and its winter-relative z-score falls below -2 (Figs. 2 and 3).
 - The ice condition has two preconditions. The melt condition must already have been met earlier in the year, and the day of minimum backscatter also must have occurred earlier in the year. If both of those hold, the ice condition triggers when either:
-    - a pixel is either 4 dB above its 5th percentile summer (May through September) backscatter level, or 
+    - a pixel is either 4 dB above its 5th percentile summer (April through July) backscatter level, or
     - when a pixel is less than 3 dB below its winter mean. (Figs. 2 and 3).
 - The second melt condition uses the same threshold as the melt condition, but additionally requires that the ice condition has already been met earlier in the year (Fig. 3).
 
@@ -77,6 +77,10 @@ We then generate a cumulative ice mask by taking this spring baseline mask, excl
 
 #### Fig. 7: After excluding pixels above the minimum melt extent, 1,305 out of 1,522 pixels (~86%) are classified as ice. The snowline elevation is therefore determined to be the 86th percentile of the glacier elevation distribution, which is 3,506 m.
 
+## RGI data dependency
 
+The Docker image includes the Alaska glacier product from the Randolph Glacier Inventory version 7.0. The build downloads a fixed archive from the UNESCO IHP-WINS public mirror, verifies its SHA-256 checksum, and installs it under `/opt/rgi`. The `RGI_ROOT` and `RGI_SHAPEFILE` environment variables provide the default paths inside the image; explicit `--rgi-root` and `--rgi-shapefile` arguments override them.
+
+RGI 7.0 is distributed under the CC BY 4.0 license. Cite the dataset as: RGI 7.0 Consortium (2023), *Randolph Glacier Inventory—A Dataset of Global Glacier Outlines, Version 7.0*, NSIDC, https://doi.org/10.5067/F6JMOVY5NAVZ.
 
 

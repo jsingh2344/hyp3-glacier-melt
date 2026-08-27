@@ -43,10 +43,22 @@ def main() -> None:
         help="Directory where generated OPERA datacube .nc should be written.",
     )
 
+    #User and Password for earthdata:
+    parser.add_argument("--username", help="Earthdata Username")
+    parser.add_argument("--password", help="Earthdata Password")
+
     # Melt pipeline auxiliary inputs/outputs
     parser.add_argument("--output-root", help="Directory for melt pipeline outputs")
-    parser.add_argument("--rgi-root", help="Directory containing RGI data folders")
-    parser.add_argument("--rgi-shapefile", help="Path to RGI shapefile")
+    parser.add_argument(
+        "--rgi-root",
+        default=os.environ.get("RGI_ROOT"),
+        help="Directory containing RGI data folders; defaults to RGI_ROOT if set",
+    )
+    parser.add_argument(
+        "--rgi-shapefile",
+        default=os.environ.get("RGI_SHAPEFILE"),
+        help="Path to RGI shapefile; defaults to RGI_SHAPEFILE if set",
+    )
 
     args = parser.parse_args()
     config = MeltConfig()

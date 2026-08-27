@@ -17,6 +17,7 @@ from rasterio.transform import Affine
 from numpy.lib.stride_tricks import sliding_window_view
 from netCDF4 import Dataset
 import os
+from pathlib import Path
 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -25,6 +26,11 @@ warnings.filterwarnings(
     message=r"The specified chunks separate the stored chunks.*",
     category=UserWarning,
 )
+
+
+def _one_based_day_of_year(dates: pd.DatetimeIndex) -> list[int]:
+    """Return standard calendar day-of-year values, with January 1 equal to 1."""
+    return pd.DatetimeIndex(dates).dayofyear.astype(int).tolist()
 
 
 class sar_datacube():
@@ -129,12 +135,12 @@ class sar_datacube():
 
         self.bin_size = bin_size
         self.area_bin_size = area_bin_size
-        self.allmelt_threshold = allmelt_threshold,
+        self.allmelt_threshold = allmelt_threshold
         self.allmelt_pixels = allmelt_pixels
         self.min_area_frac = min_area_frac
     
                
-    def glacnos_to_process(self):
+    def glacnos_to_process(self) -> pd.DataFrame:
         """
         Identify glacier numbers to process
         
@@ -149,8 +155,10 @@ class sar_datacube():
         """
         glacnos = sorted(list(np.unique(self.mask_values)))[1:]
         glacnos_str = [str(self.rgi_reg) + '.' + str(x).zfill(5) for x in glacnos]
-        
-        assert len(glacnos_str) > 0, 'No glaciers to process'
+
+        if not glacnos_str:
+            return pd.DataFrame(columns=['glacno', 'ds_area_frac', 'rgino_str'])
+
         main_glac_rgi_raw = selectglaciersrgitable(rgi_fp=self.paths.rgi_root, rgi_cols_drop = self.rgi_cols_drop,
                                                    glac_no=glacnos_str, min_glac_area_km2=self.min_glac_area_km2)
         glacnos_raw = list(main_glac_rgi_raw.glacno.values)
@@ -186,7 +194,9 @@ class sar_datacube():
                 glacnos_dsfrac.append(area_ds_frac)
                 glacnos_sarfrac.append(area_sar_frac)
         
-        assert len(glacnos_2process) > 0, 'No glaciers suitable for processing'
+        if not glacnos_2process:
+            return pd.DataFrame(columns=['glacno', 'ds_area_frac', 'rgino_str'])
+
         glacnos_2process_str = [str(self.rgi_reg) + '.' + str(x).zfill(5) for x in glacnos_2process]
         main_glac_rgi_sar = selectglaciersrgitable(rgi_fp=self.paths.rgi_root, rgi_cols_drop=self.rgi_cols_drop, glac_no=glacnos_2process_str)
         main_glac_rgi_sar['ds_area_frac'] = glacnos_dsfrac
@@ -226,7 +236,7 @@ class sar_datacube():
         self.years = [x.year for x in dates_pd]
         self.months = [x.month for x in dates_pd]
         self.days = [x.day for x in dates_pd]
-        self.doys = [int(x.to_julian_date() - pd.Timestamp(x.year,1,1).to_julian_date()) for x in dates_pd]
+        self.doys = _one_based_day_of_year(dates_pd)
         
         winter_idx = [idx for idx, element in enumerate(self.months) if element in self.winter_months]
         
@@ -492,7 +502,7 @@ class sar_datacube():
                                                 percentile=1.0,
                                                 min_valid_frac=0.01,
                                                 plot_year=2024,
-                                                plot_dir=None):
+                                                plot_dir=None) -> Path:
         
         #Setting up directories, glacier mask
         plot_dir = os.path.join(os.getcwd(), 'testing')
@@ -611,7 +621,11 @@ class sar_datacube():
 
                 ### Add nomelt pixels to help snowline post-processing
                 nomelt_pixels_below = np.nansum((glac_dem < melt_extent_elev) & (melted_2d == 0))
-                melt_extent_elev_min = dem_values_sorted[n_melt - nomelt_pixels_below]
+                min_idx = max(
+                    0,
+                    min(len(dem_values_sorted) - 1, int(n_melt - nomelt_pixels_below)),
+                )
+                melt_extent_elev_min = dem_values_sorted[min_idx]
                 
                 first_melt = original_snowline_2d & (~melted_2d_mask) #use mask to avoid adjusting w allmelt included melt pixels
                 final_snowline = first_melt | snowline_2d
@@ -653,7 +667,7 @@ class sar_datacube():
                     melt_idx = int(0)
                 else:
                     melt_idx = int(melt_pixels - 1)               
-                melt_area_m2 = melt_idx*self.xres*self.yres
+                melt_area_m2 = melt_pixels*self.xres*self.yres
 
                 max_snowline = melt_extent_elev_min
                 final_snowline_for_mask = final_snowline.copy()
@@ -717,8 +731,11 @@ class sar_datacube():
                 for csv_path in yearly_csv_paths:
                     if os.path.exists(csv_path):
                         os.remove(csv_path)
-        
-    
+
+                return Path(merged_csv_path)
+
+        raise RuntimeError(f"No CSV output generated for glacier {glacno}")
+
     def single_glacier_preprocess(self, glacno=None, area_km2=10, verbose=False):
         """
         Glacier melt extent elevations for individual glaciers
@@ -922,8 +939,16 @@ class sar_datacube():
                 # percentile method uncertainty
                 nomelt_pixels_below = np.nansum((glac_dem < melt_extent_elev) & (data_cp_glac_single == 0))
                 melt_pixels_above = np.nansum((glac_dem > melt_extent_elev) & (data_cp_glac_single == 1))
-                melt_extent_elev_min = dem_values_sorted[melt_idx - nomelt_pixels_below]
-                melt_extent_elev_max = dem_values_sorted[melt_idx + melt_pixels_above]
+                min_idx = max(
+                    0,
+                    min(len(dem_values_sorted) - 1, int(melt_idx - nomelt_pixels_below)),
+                )
+                max_idx = max(
+                    0,
+                    min(len(dem_values_sorted) - 1, int(melt_idx + melt_pixels_above)),
+                )
+                melt_extent_elev_min = dem_values_sorted[min_idx]
+                melt_extent_elev_max = dem_values_sorted[max_idx]
                 melt_extent_elev_mins.append(melt_extent_elev_min)
                 melt_extent_elev_maxs.append(melt_extent_elev_max)
 
