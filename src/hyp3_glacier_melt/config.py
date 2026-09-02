@@ -22,7 +22,7 @@ class MeltConfig:
     min_area_frac = 0.9
     subset_y = (500, 1000)
     subset_x = (500, 1000)
-    use_spatial_tiling = True #Setting to false could load many many GBs into RAM!
+    use_spatial_tiling = False #Setting to false could load many many GBs into RAM!
     tile_y = 500
     tile_x = 500
     rgi_cols_drop = ['glims_id', 'anlys_id', 'subm_id']

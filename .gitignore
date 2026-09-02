@@ -249,6 +249,11 @@ hyp3_cache/
 *.tif
 *.zip
 Glaciers/
+DEM/
+opera/
+prev_notebooks/
+datacubes-auto-dem/
+output-auto-dem/
 
 # Local plotting utilities
 utility/

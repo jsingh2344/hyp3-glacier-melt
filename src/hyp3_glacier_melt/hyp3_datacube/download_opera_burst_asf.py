@@ -19,9 +19,10 @@ This will:
   3. Write:
        - download_manifest.csv: all selected/downloaded URLs
        - search_results.geojson: ASF search result metadata
-       - file_list.txt: quoted local paths usable by generate_opera_cube.py
-         The file_list.txt intentionally includes only DEM + selected polarization GeoTIFFs,
-         because generate_opera_cube.py expects SAR .tif files plus dem.tif, not masks/aux rasters.
+       - file_list.txt: quoted local paths usable by generate_opera_cube.py.
+         The file_list.txt includes selected-polarization GeoTIFFs. The cube workflow
+         obtains its Copernicus GLO-30 DEM separately through hyp3lib unless a local
+         DEM is explicitly supplied.
 
 Authentication:
   Preferred: use a ~/.netrc file with Earthdata credentials.
@@ -41,7 +42,6 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
@@ -96,7 +96,7 @@ def parse_args() -> argparse.Namespace:
             "Which URLs to download. "
             "'main' downloads only primary product URLs, usually .h5. "
             "'geotiff' downloads all additional .tif/.tiff URLs. "
-            "'cube' downloads only selected polarization GeoTIFFs plus DEM GeoTIFFs. "
+            "'cube' downloads only selected-polarization GeoTIFFs. "
             "'all' downloads primary product URLs plus all additional URLs. Default: all."
         ),
     )
@@ -217,11 +217,6 @@ def is_geotiff_url(url: str) -> bool:
     return name.endswith(".tif") or name.endswith(".tiff")
 
 
-def is_dem_url(url: str) -> bool:
-    name = filename_from_url(url).lower()
-    return name.endswith(".tif") and ("dem" in name)
-
-
 def is_pol_geotiff_url(url: str, pol: str) -> bool:
     name = filename_from_url(url)
     pol = pol.upper()
@@ -249,7 +244,7 @@ def select_urls_for_product(
             selected.append((main_url, "main"))
 
         elif asset_mode == "cube":
-            if is_pol_geotiff_url(main_url, polarization) or is_dem_url(main_url):
+            if is_pol_geotiff_url(main_url, polarization):
                 selected.append((main_url, "main"))
 
     if asset_mode in ("geotiff", "cube", "all"):
@@ -261,7 +256,7 @@ def select_urls_for_product(
             elif asset_mode == "geotiff":
                 include = is_geotiff_url(url)
             elif asset_mode == "cube":
-                include = is_pol_geotiff_url(url, polarization) or is_dem_url(url)
+                include = is_pol_geotiff_url(url, polarization)
 
             if include:
                 selected.append((url, "additional"))
@@ -301,7 +296,7 @@ def search_opera_products(args: argparse.Namespace):
     burst_id = normalize_opera_burst_id(args.opera_burst_id)
 
     print("Searching ASF...")
-    print(f"  dataset          = OPERA-S1")
+    print("  dataset          = OPERA-S1")
     print(f"  processingLevel  = {args.processing_level}")
     print(f"  operaBurstID     = {burst_id}")
     print(f"  start            = {start}")
@@ -368,11 +363,7 @@ def write_cube_file_list(rows: list[dict[str, str]], path: Path) -> None:
         if row["selected_for_cube_file_list"].lower() == "true"
     ]
 
-    # Stable order: DEM first if present, then SAR dates/files alphabetically.
-    cube_paths = sorted(
-        cube_paths,
-        key=lambda p: (0 if "dem" in Path(p).name.lower() else 1, Path(p).name),
-    )
+    cube_paths = sorted(cube_paths, key=lambda p: Path(p).name)
 
     with path.open("w", encoding="utf-8") as f:
         for p in cube_paths:
@@ -409,10 +400,7 @@ def run_download_opera_burst(args) -> int:
             local_path = local_path_for_url(args.output_dir, url)
             already_existed = local_path.exists() and local_path.stat().st_size > 0
 
-            selected_for_cube = (
-                is_pol_geotiff_url(url, args.polarization)
-                or is_dem_url(url)
-            )
+            selected_for_cube = is_pol_geotiff_url(url, args.polarization)
 
             url_rows.append(
                 {

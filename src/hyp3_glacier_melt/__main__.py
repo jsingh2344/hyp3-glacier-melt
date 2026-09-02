@@ -36,7 +36,10 @@ def main() -> None:
     )
     parser.add_argument(
         "--opera-dem",
-        help="Path to DEM GeoTIFF for OPERA cube creation.",
+        help=(
+            "Optional path to a DEM GeoTIFF. If omitted, create a Copernicus "
+            "GLO-30 DEM covering the OPERA burst."
+        ),
     )
     parser.add_argument(
         "--opera-output-dir",
@@ -86,8 +89,6 @@ def main() -> None:
             raise ValueError("--opera-burst-id is required when --datacube is not provided")
         if not args.opera_input_dir:
             raise ValueError("--opera-input-dir is required when --datacube is not provided")
-        if not args.opera_dem:
-            raise ValueError("--opera-dem is required when --datacube is not provided")
         if not args.opera_output_dir:
             raise ValueError("--opera-output-dir is required when --datacube is not provided")
         if not args.rgi_shapefile:
@@ -145,6 +146,7 @@ def main() -> None:
             resample_alg=config.opera_resample_alg,
             write_db=config.opera_write_db,
             overwrite=config.opera_overwrite_cube,
+            opera_burst_id=args.opera_burst_id,
         )
 
         datacube_arg = str(generated_datacube)

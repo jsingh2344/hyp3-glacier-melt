@@ -1,13 +1,13 @@
 import math
 import re
-import os
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 import numpy as np
 from netCDF4 import Dataset
 from osgeo import gdal, ogr, osr
 from tqdm import tqdm
+
 
 gdal.UseExceptions()
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -21,7 +21,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 
 OPERA_BURST_DIR = SCRIPT_DIR / "opera_burst_files"
 
-DEM_PATH = SCRIPT_DIR / "dem.tif"
+DEM_PATH = None
 OUT_DIR = SCRIPT_DIR / "output_nc"
 
 WRITE_DB = True
@@ -98,11 +98,57 @@ def parse_input_paths(opera_burst_dir: Path):
     return [], sort_paths_stably(sar_paths)
 
 
-def extract_date_from_filename(path: Path):
-    m = re.search(r"_(\d{8})T\d{6}Z_", path.name)
+def extract_acquisition_timestamp_from_filename(path: Path):
+    m = re.search(r"_(\d{8}T\d{6}Z)_(\d{8}T\d{6}Z)_", path.name)
     if m is None:
-        raise ValueError(f"Could not extract acquisition date from filename: {path.name}")
+        raise ValueError(f"Could not extract acquisition timestamp from filename: {path.name}")
     return m.group(1)
+
+
+def extract_production_timestamp_from_filename(path: Path):
+    m = re.search(r"_(\d{8}T\d{6}Z)_(\d{8}T\d{6}Z)_", path.name)
+    if m is None:
+        raise ValueError(f"Could not extract production timestamp from filename: {path.name}")
+    return m.group(2)
+
+
+def select_latest_opera_files(sar_paths: list[Path]) -> list[Path]:
+    """Select the latest-produced OPERA file for each acquisition timestamp."""
+    paths_by_acquisition = {}
+    for path in sar_paths:
+        path = Path(path)
+        acquisition_timestamp = extract_acquisition_timestamp_from_filename(path)
+        paths_by_acquisition.setdefault(acquisition_timestamp, []).append(path)
+
+    selected_paths = []
+    for acquisition_timestamp, candidates in paths_by_acquisition.items():
+        latest_production_timestamp = max(
+            extract_production_timestamp_from_filename(path)
+            for path in candidates
+        )
+        latest_candidates = [
+            path
+            for path in candidates
+            if extract_production_timestamp_from_filename(path) == latest_production_timestamp
+        ]
+        if len(latest_candidates) != 1:
+            filenames = ", ".join(sorted(path.name for path in latest_candidates))
+            raise ValueError(
+                f"Multiple OPERA files for acquisition {acquisition_timestamp} have "
+                f"the same latest production timestamp {latest_production_timestamp}: {filenames}"
+            )
+        selected_paths.append(latest_candidates[0])
+
+    return sorted(selected_paths, key=extract_acquisition_timestamp_from_filename)
+
+
+def opera_timestamp_to_datetime64(timestamp: str):
+    """Convert an OPERA compact UTC timestamp to a NumPy datetime."""
+    formatted = (
+        f"{timestamp[:4]}-{timestamp[4:6]}-{timestamp[6:8]}"
+        f"T{timestamp[9:11]}:{timestamp[11:13]}:{timestamp[13:15]}"
+    )
+    return np.datetime64(formatted, "s")
 
 
 def extract_opera_burst_id_from_filename(path: Path):
@@ -111,6 +157,52 @@ def extract_opera_burst_id_from_filename(path: Path):
         raise ValueError(f"Could not extract OPERA burst ID from filename: {path.name}")
 
     return m.group(1).upper().replace("_", "-")
+
+
+def normalize_opera_burst_id(value: str) -> str:
+    """Return an OPERA burst ID in canonical hyphen-separated form."""
+    normalized = str(value).strip().upper().replace("_", "-")
+    if re.fullmatch(r"T\d+-\d+-IW\d", normalized) is None:
+        raise ValueError(f"Invalid OPERA burst ID: {value}")
+    return normalized
+
+
+def verify_opera_burst_paths(
+    sar_paths: list[Path],
+    expected_burst_id: str | None = None,
+) -> str:
+    """Verify that every SAR input belongs to one expected OPERA burst."""
+    if not sar_paths:
+        raise ValueError("No OPERA SAR paths were provided for burst verification.")
+
+    paths_by_burst = {}
+    for path in sar_paths:
+        path = Path(path)
+        burst_id = normalize_opera_burst_id(extract_opera_burst_id_from_filename(path))
+        paths_by_burst.setdefault(burst_id, []).append(path)
+
+    discovered_bursts = sorted(paths_by_burst)
+    if len(discovered_bursts) != 1:
+        counts = ", ".join(
+            f"{burst_id}: {len(paths_by_burst[burst_id])} file(s)"
+            for burst_id in discovered_bursts
+        )
+        raise ValueError(
+            "OPERA input directory contains files from multiple bursts: "
+            f"{counts}. Use a directory containing only the requested burst."
+        )
+
+    discovered_burst_id = discovered_bursts[0]
+    if expected_burst_id is not None:
+        expected_burst_id = normalize_opera_burst_id(expected_burst_id)
+        if discovered_burst_id != expected_burst_id:
+            raise ValueError(
+                f"Requested OPERA burst {expected_burst_id}, but all "
+                f"{len(sar_paths)} discovered SAR file(s) belong to {discovered_burst_id}."
+            )
+
+    return discovered_burst_id
+
 
 def extract_pol_from_filename(path: Path):
     m = re.search(r"_([Vv][Vv]|[Vv][Hh]|[Hh][Hh]|[Hh][Vv])\.tiff?$", path.name)
@@ -176,6 +268,45 @@ def transform_bounds(bounds, src_epsg_str, dst_epsg_str):
         out_y.append(ty)
 
     return (min(out_x), min(out_y), max(out_x), max(out_y))
+
+
+def polygon_from_bounds(bounds):
+    """Create an OGR polygon from min-x, min-y, max-x, max-y bounds."""
+    min_x, min_y, max_x, max_y = bounds
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(min_x, min_y)
+    ring.AddPoint(min_x, max_y)
+    ring.AddPoint(max_x, max_y)
+    ring.AddPoint(max_x, min_y)
+    ring.AddPoint(min_x, min_y)
+
+    polygon = ogr.Geometry(ogr.wkbPolygon)
+    polygon.AddGeometry(ring)
+    return polygon
+
+
+def source_copernicus_dem(output_path, output_bounds, output_epsg_str):
+    """Create a Copernicus GLO-30 DEM covering the cube bounds."""
+    from hyp3lib.dem import prepare_dem_geotiff
+
+    geographic_bounds = transform_bounds(
+        output_bounds,
+        output_epsg_str,
+        "EPSG:4326",
+    )
+    geographic_polygon = polygon_from_bounds(geographic_bounds)
+    epsg_code = int(output_epsg_str.split(":")[-1])
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    return prepare_dem_geotiff(
+        output_name=output_path,
+        geometry=geographic_polygon,
+        epsg_code=epsg_code,
+        pixel_size=30.0,
+        buffer_size_in_degrees=0.01,
+        height_above_ellipsoid=False,
+    )
 
 
 def snap_bounds_to_grid(bounds, xres, yres, mode="outer"):
@@ -357,20 +488,6 @@ def open_and_resample_to_cube_grid(src_path, epsg_str_for_cube, projwin, output_
     return out
 
 
-def merge_same_date_arrays(arrays, nodata_value):
-    merged = arrays[0].copy()
-
-    if nodata_value is None:
-        for arr in arrays[1:]:
-            merged = np.where(np.isnan(merged), arr, merged)
-        return merged
-
-    for arr in arrays[1:]:
-        merged[merged == nodata_value] = arr[merged == nodata_value]
-
-    return merged
-
-
 # ============================================================
 # MAIN
 # ============================================================
@@ -386,6 +503,7 @@ def generate_opera_cube(
     resample_alg="average",
     write_db=True,
     overwrite=True,
+    opera_burst_id=None,
 ):
     global OPERA_BURST_DIR
     global DEM_PATH
@@ -399,7 +517,7 @@ def generate_opera_cube(
     global OVERWRITE
 
     OPERA_BURST_DIR = Path(opera_input_dir)
-    DEM_PATH = Path(dem_path)
+    DEM_PATH = Path(dem_path) if dem_path else None
     RGI_SHAPEFILE_PATH = Path(rgi_shapefile_path)
     OUT_DIR = Path(out_dir)
 
@@ -410,23 +528,20 @@ def generate_opera_cube(
     WRITE_DB = bool(write_db)
     OVERWRITE = bool(overwrite)
 
-    return run_generate_opera_cube()
+    return run_generate_opera_cube(expected_opera_burst_id=opera_burst_id)
 
 
-def run_generate_opera_cube():
+def run_generate_opera_cube(expected_opera_burst_id=None):
     out_dir = OUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    listed_dem_candidates, sar_paths = parse_input_paths(OPERA_BURST_DIR)
+    _, sar_paths = parse_input_paths(OPERA_BURST_DIR)
 
-    if DEM_PATH.exists():
+    dem_path = None
+    if DEM_PATH is not None:
+        if not DEM_PATH.exists():
+            raise FileNotFoundError(f"Could not find the requested DEM: {DEM_PATH}")
         dem_path = DEM_PATH
-    elif listed_dem_candidates:
-        dem_path = listed_dem_candidates[0]
-    else:
-        raise FileNotFoundError(
-            f"Could not find DEM. Expected {DEM_PATH}, or dem.tif inside {OPERA_BURST_DIR}."
-        )
 
     sar_paths = [p for p in sar_paths if p.exists()]
     if len(sar_paths) == 0:
@@ -436,7 +551,13 @@ def run_generate_opera_cube():
 
     sar_paths = sort_paths_stably(sar_paths)
 
-    opera_burst_id = extract_opera_burst_id_from_filename(sar_paths[0])
+    opera_burst_id = verify_opera_burst_paths(
+        sar_paths,
+        expected_burst_id=expected_opera_burst_id,
+    )
+    discovered_file_count = len(sar_paths)
+    sar_paths = select_latest_opera_files(sar_paths)
+    superseded_file_count = discovered_file_count - len(sar_paths)
     pol_str = extract_pol_from_filename(sar_paths[0])
 
     sar_ref_ds = gdal.Open(str(sar_paths[0]))
@@ -454,6 +575,18 @@ def run_generate_opera_cube():
     )
     projwin = output_bounds_to_projwin(output_bounds)
 
+    if dem_path is None:
+        dem_path = out_dir / f"copernicus_glo30_{opera_burst_id}_30m.tif"
+        if dem_path.exists():
+            print(f"Reusing generated Copernicus GLO-30 DEM: {dem_path}")
+        else:
+            print(f"Creating Copernicus GLO-30 DEM: {dem_path}")
+            source_copernicus_dem(
+                output_path=dem_path,
+                output_bounds=output_bounds,
+                output_epsg_str=epsg_str_for_cube,
+            )
+
     out_nc_filename = out_dir / f"{epsg_str_for_cube.split(':')[-1]}_S1_cube_{pol_str}_{opera_burst_id}.nc"
     tmp_nc = out_nc_filename.with_name(out_nc_filename.stem + "_partial.nc")
 
@@ -468,7 +601,9 @@ def run_generate_opera_cube():
         tmp_nc.unlink()
 
     print(f"DEM: {dem_path}")
-    print(f"SAR files found: {len(sar_paths)}")
+    print(f"SAR files found: {discovered_file_count}")
+    print(f"Latest OPERA files selected: {len(sar_paths)}")
+    print(f"Superseded OPERA files excluded: {superseded_file_count}")
     print(f"Polarization: {pol_str}")
     print(f"EPSG for cube: {epsg_str_for_cube}")
     print(f"OPERA burst ID: {opera_burst_id}")
@@ -476,15 +611,14 @@ def run_generate_opera_cube():
     print(f"outputBounds (from scenes): {output_bounds}")
     print(f"Output netCDF: {out_nc_filename}")
 
-    indate_and_tifs = {}
-    for p in sar_paths:
-        acq_date = extract_date_from_filename(p)
-        indate_and_tifs.setdefault(acq_date, []).append(p)
+    acquisition_and_tif = {
+        extract_acquisition_timestamp_from_filename(path): path
+        for path in sar_paths
+    }
+    acquisition_timestamps = sorted(acquisition_and_tif)
+    num_dates = len(acquisition_timestamps)
 
-    unique_dates = sorted(indate_and_tifs.keys())
-    num_dates = len(unique_dates)
-
-    print(f"Unique acquisition dates: {num_dates}")
+    print(f"Unique acquisitions: {num_dates}")
 
     rgi_ind_shape_arr, rgi_aspect_arr = rasterize_rgi_layers(
         RGI_SHAPEFILE_PATH,
@@ -526,8 +660,8 @@ def run_generate_opera_cube():
 
     time_vec = np.array(
         [
-            np.datetime64(f"{d[:4]}-{d[4:6]}-{d[6:]}", "s").astype("datetime64[s]").astype(np.int64)
-            for d in unique_dates
+            opera_timestamp_to_datetime64(timestamp).astype(np.int64)
+            for timestamp in acquisition_timestamps
         ],
         dtype=np.int64,
     )
@@ -598,30 +732,26 @@ def run_generate_opera_cube():
 
         root.sync()
 
-        for framecount, framedate in enumerate(tqdm(unique_dates, desc="reading/writing images")):
-            same_date_files = sort_paths_stably(indate_and_tifs[framedate])
-            sub_gd_imgs = []
+        for framecount, acquisition_timestamp in enumerate(
+            tqdm(acquisition_timestamps, desc="reading/writing images")
+        ):
+            tif_path = acquisition_and_tif[acquisition_timestamp]
+            sub_gd_img = open_and_resample_to_cube_grid(
+                tif_path,
+                epsg_str_for_cube,
+                projwin,
+                output_bounds,
+                XRES,
+                YRES,
+                RESAMPLE_ALG,
+            )
+            full_img_sm = sub_gd_img.ReadAsArray().astype(np.float32)
 
-            for tif_path in same_date_files:
-                sub_gd_img = open_and_resample_to_cube_grid(
-                    tif_path,
-                    epsg_str_for_cube,
-                    projwin,
-                    output_bounds,
-                    XRES,
-                    YRES,
-                    RESAMPLE_ALG,
-                )
-                sub_gd_imgs.append(sub_gd_img)
-
-            img_sms = [ds.ReadAsArray() for ds in sub_gd_imgs]
-
-            band1 = sub_gd_imgs[0].GetRasterBand(1)
+            band1 = sub_gd_img.GetRasterBand(1)
             img_nodata_val = band1.GetNoDataValue()
             band1 = None
-            sub_gd_imgs = None
+            sub_gd_img = None
 
-            full_img_sm = merge_same_date_arrays(img_sms, img_nodata_val).astype(np.float32)
             full_img_sm = convert_backscatter(
                 full_img_sm,
                 nodata_value=img_nodata_val,

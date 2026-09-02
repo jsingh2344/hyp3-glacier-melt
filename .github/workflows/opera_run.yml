@@ -31,7 +31,6 @@ jobs:
       - name: Verify input folders
         run: |
           ls -lh /home/ubuntu/glacier-inputs || true
-          ls -lh /home/ubuntu/glacier-inputs/DEM
           ls -lh /home/ubuntu/glacier-inputs/Glaciers/RGI2000-v7.0-G-01_alaska/RGI2000-v7.0-G-01_alaska.shp
 
       - name: Run glacier pipeline
@@ -45,13 +44,11 @@ jobs:
             -e EARTHDATA_PASSWORD="${{ secrets.EARTHDATA_PASSWORD }}" \
             -v /home/ubuntu/glacier-inputs/opera:/data/opera \
             -v /home/ubuntu/glacier-inputs/datacubes:/data/datacubes \
-            -v /home/ubuntu/glacier-inputs/DEM:/data/DEM \
             -v /home/ubuntu/glacier-inputs/Glaciers:/data/Glaciers \
             -v /home/ubuntu/glacier-inputs/outputs:/data/output \
             ghcr.io/jsingh2344/glacier-melt-local:latest \
             --opera-burst-id "${{ github.event.inputs.opera_burst_id }}" \
             --opera-input-dir /data/opera \
-            --opera-dem /data/DEM/dem.tif \
             --opera-output-dir /data/datacubes \
             --output-root /data/output \
             --rgi-root /data/Glaciers \

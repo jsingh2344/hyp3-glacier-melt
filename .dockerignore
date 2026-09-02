@@ -11,6 +11,11 @@ output_nc
 output
 hyp3_cache
 Glaciers
+DEM
+opera
+prev_notebooks
+datacubes-auto-dem
+output-auto-dem
 
 *.nc
 *.zip

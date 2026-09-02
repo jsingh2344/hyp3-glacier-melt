@@ -83,4 +83,7 @@ The Docker image includes the Alaska glacier product from the Randolph Glacier I
 
 RGI 7.0 is distributed under the CC BY 4.0 license. Cite the dataset as: RGI 7.0 Consortium (2023), *Randolph Glacier Inventory—A Dataset of Global Glacier Outlines, Version 7.0*, NSIDC, https://doi.org/10.5067/F6JMOVY5NAVZ.
 
+## DEM dependency
+
+When building a datacube from OPERA RTC-S1 files, the workflow creates a Copernicus GLO-30 DEM covering the verified burst footprint using `hyp3lib.dem.prepare_dem_geotiff`. The DEM is produced at 30 m resolution in the OPERA burst projection with elevations relative to mean sea level, then resampled onto the datacube grid. Supplying `--opera-dem` uses that local GeoTIFF instead of sourcing a DEM automatically.
 
