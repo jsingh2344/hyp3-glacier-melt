@@ -10,10 +10,7 @@ from hyp3_glacier_melt.product import package_product
 from hyp3_glacier_melt.melt_pipeline import run_melt_pipeline
 from hyp3_glacier_melt.config import MeltConfig
 from hyp3_glacier_melt.paths import MeltPaths
-from hyp3_glacier_melt.hyp3_datacube.create_datacube import (
-    DatacubeBuildConfig,
-    build_datacube,
-)
+
 
 
 
@@ -44,29 +41,14 @@ def process_glacier_melt(
         Path(rgi_root) / "RGI2000-v7.0-G-01_alaska" / "RGI2000-v7.0-G-01_alaska.shp"
     )
 
-    if datacube is not None:
-        datacube_path = Path(datacube)
-        log.info("Running melt pipeline on existing datacube: %s", datacube_path)
-    else:
-        log.info("No datacube provided; building one from ASF/HyP3 first")
-
-
-        dc_cfg = DatacubeBuildConfig(
-            rgi_shapefile=Path(rgi_shapefile),
-            scene_name=config.scene_name,
-            epsg_no=config.epsg_no,
-            path_frame_dict=config.path_frame_dict,
-            direction=None,
-            pol=config.pol_str,
-            start_date="2017-01-01",
-            end_date="2024-12-31",
-            out_nc_dir=cwd / "datacubes",
-            cache_dir=cwd / "hyp3_cache",
-            resample_alg="bilinear",
+    if datacube is None:
+        raise ValueError(
+            "A datacube is required; the CLI must download the OPERA data "
+            "and generate the datacube before melt processing."
         )
 
-        datacube_path = build_datacube(dc_cfg)
-        log.info("Built datacube: %s", datacube_path)
+    datacube_path = Path(datacube)
+    log.info("Running melt pipeline on datacube: %s", datacube_path)
 
 
     final_output_root = Path(output_root or cwd / "output")
