@@ -1,12 +1,26 @@
 import logging
 import os
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
+from datetime import date
 from pathlib import Path
 
 from hyp3lib.aws import upload_file_to_s3
 
 from hyp3_glacier_melt.config import MeltConfig
 from hyp3_glacier_melt.process import process_glacier_melt
+
+#For start/end dates
+def iso_date(value: str) -> str:
+    try:
+        parsed_date = date.fromisoformat(value)
+    except ValueError as exc:
+        raise ArgumentTypeError(f"Invalid date: {value}; expected YYYY-MM-DD") from exc
+
+    if parsed_date.isoformat() != value:
+        raise ArgumentTypeError(f"Invalid date: {value}; expected YYYY-MM-DD")
+
+    return value
+
 
 
 def main() -> None:
@@ -33,6 +47,16 @@ def main() -> None:
     parser.add_argument(
         "--opera-download-dir",
         help="Optional separate directory where downloaded OPERA files should be written.",
+    )
+    parser.add_argument(
+        "--start-date",
+        type=iso_date,
+        help="First OPERA acquisition date in YYYY-MM-DD format",
+    )
+    parser.add_argument(
+        "--end-date",
+        type=iso_date,
+        help="Last OPERA acquisition date in YYYY-MM-DD format",
     )
     parser.add_argument(
         "--opera-dem",
@@ -85,6 +109,14 @@ def main() -> None:
     else:
         logging.info("No --datacube provided; building OPERA datacube first.")
 
+
+        #Check dates are valid
+        if not args.start_date:
+            parser.error("--start-date is required when --datacube is not provided")
+        if not args.end_date:
+            parser.error("--end-date is required when --datacube is not provided")
+        if date.fromisoformat(args.start_date) > date.fromisoformat(args.end_date):
+            parser.error("--start-date must be on or before --end-date")
         if not args.opera_burst_id:
             raise ValueError("--opera-burst-id is required when --datacube is not provided")
         if not args.opera_input_dir:
@@ -93,6 +125,8 @@ def main() -> None:
             raise ValueError("--opera-output-dir is required when --datacube is not provided")
         if not args.rgi_shapefile:
             raise ValueError("--rgi-shapefile is required when --datacube is not provided")
+        
+        
 
         # ---------------------------------------------------------------------
         # Optional OPERA download stage, controlled by config.py
@@ -106,8 +140,8 @@ def main() -> None:
 
             download_args = Namespace(
                 opera_burst_id=args.opera_burst_id,
-                start=config.opera_start,
-                end=config.opera_end,
+                start=args.start_date, #Switched from config control to command line
+                end=args.end_date,
                 output_dir=Path(opera_download_dir),
                 processing_level=getattr(config, "opera_processing_level", "RTC"),
                 polarization=config.pol_str,
