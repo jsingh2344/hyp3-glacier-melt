@@ -77,7 +77,7 @@ class sar_datacube():
         self.ds = ds.isel(y=subset_y, x=subset_x)
         
         
-        self.data = (ds.images.isel(y=subset_y, x=subset_x)).values
+        self.load_image_data(nan_filter)
         if not nan_filter is None:
             self.data[self.data < nan_filter] = np.nan
         mask_good_pixels = np.sum(self.data, axis=0)
@@ -138,7 +138,21 @@ class sar_datacube():
         self.allmelt_threshold = allmelt_threshold
         self.allmelt_pixels = allmelt_pixels
         self.min_area_frac = min_area_frac
-    
+
+    def load_image_data(self, nan_filter): 
+        """Load and prepare the image time series for the selected spatial subset."""
+        self.data = self.ds.images.values
+
+        if nan_filter is not None:
+            self.data[self.data < nan_filter] = np.nan
+
+        self.valid_pixel_mask = np.all(np.isfinite(self.data), axis=0)
+        self.mask_good_pixels = self.valid_pixel_mask.astype(np.float32)
+        self.data_good = np.where(
+            self.valid_pixel_mask[np.newaxis, :, :],
+            self.data,
+            np.nan,
+        )
                
     def glacnos_to_process(self) -> pd.DataFrame:
         """
@@ -187,7 +201,11 @@ class sar_datacube():
             area_ds = np.where(self.mask_values == glacno)[0].shape[0] * self.xres * self.yres / 1e6
             area_ds_frac = area_ds / area_km2
             
-            area_sar = np.where(~np.isnan(self.data_good[0,:,:][np.where(self.mask_values == glacno)]))[0].shape[0] * self.xres * self.yres / 1e6
+            glacier_pixel_mask = self.mask_values == glacno
+            valid_glacier_pixels = np.count_nonzero(
+                self.valid_pixel_mask & glacier_pixel_mask
+            )
+            area_sar = valid_glacier_pixels * self.xres * self.yres / 1e6
             area_sar_frac = area_sar / area_km2
             if area_ds_frac > self.min_area_frac and area_sar_frac > self.min_area_frac:
                 glacnos_2process.append(glacno)
