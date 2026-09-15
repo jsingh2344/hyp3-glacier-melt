@@ -5,8 +5,8 @@ LABEL org.opencontainers.image.description="Melt extents and snowlines from RTC 
 LABEL org.opencontainers.image.vendor="Alaska Satellite Facility"
 LABEL org.opencontainers.image.authors="jsingh2344 <jadens@andrew.cmu.edu>"
 LABEL org.opencontainers.image.licenses="BSD-3-Clause"
-LABEL org.opencontainers.image.url="https://github.com/jsingh2344/hyp3-repo"
-LABEL org.opencontainers.image.source="https://github.com/jsingh2344/hyp3-repo"
+LABEL org.opencontainers.image.url="https://github.com/jsingh2344/hyp3-glacier-melt"
+LABEL org.opencontainers.image.source="https://github.com/jsingh2344/hyp3-glacier-melt"
 LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive

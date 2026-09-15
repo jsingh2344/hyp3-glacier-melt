@@ -9,6 +9,10 @@ from hyp3lib.aws import upload_file_to_s3
 from hyp3_glacier_melt.config import MeltConfig
 from hyp3_glacier_melt.process import process_glacier_melt
 
+
+#Scratch directory for docker image tmp directory
+DEFAULT_WORK_ROOT = Path("/tmp/hyp3-glacier-melt")
+
 #For start/end dates
 def iso_date(value: str) -> str:
     try:
@@ -42,6 +46,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--opera-input-dir",
+        default=str(DEFAULT_WORK_ROOT / "opera"),
         help="Directory containing local OPERA GeoTIFF files. Also used as download target if --opera-download-dir is omitted.",
     )
     parser.add_argument(
@@ -67,15 +72,18 @@ def main() -> None:
     )
     parser.add_argument(
         "--opera-output-dir",
+        default=str(DEFAULT_WORK_ROOT / "datacubes"),
         help="Directory where generated OPERA datacube .nc should be written.",
     )
+    parser.add_argument(
+        "--output-root",
+        default=str(DEFAULT_WORK_ROOT / "output"),
+        help="Directory for melt pipeline outputs",
+    )
 
-    #User and Password for earthdata:
-    parser.add_argument("--username", help="Earthdata Username")
-    parser.add_argument("--password", help="Earthdata Password")
 
     # Melt pipeline auxiliary inputs/outputs
-    parser.add_argument("--output-root", help="Directory for melt pipeline outputs")
+    # parser.add_argument("--output-root", help="Directory for melt pipeline outputs") #Switched to using tmp structure
     parser.add_argument(
         "--rgi-root",
         default=os.environ.get("RGI_ROOT"),
@@ -199,6 +207,9 @@ def main() -> None:
         output_root=args.output_root,
         rgi_root=args.rgi_root,
         rgi_shapefile=args.rgi_shapefile,
+        opera_burst_id=args.opera_burst_id, #Passing to name products after burst id
+        start_date=args.start_date,
+        end_date=args.end_date,
     )
 
     logging.info("process_glacier_melt returned: %s", product_file)

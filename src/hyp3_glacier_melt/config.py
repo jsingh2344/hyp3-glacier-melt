@@ -42,8 +42,6 @@ class MeltConfig:
 
     # OPERA acquisition settings
     opera_burst_id: str = "T014_028627_IW2"
-    opera_start: str = "2017-01-01"
-    opera_end: str = "2024-12-31"
     opera_download_processes: int = 1
     opera_overwrite_downloads: bool = False
 
