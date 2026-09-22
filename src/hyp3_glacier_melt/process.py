@@ -1,16 +1,14 @@
 """glacier melt processing."""
 
 import logging
-from pathlib import Path
-import os
-from tempfile import TemporaryDirectory
 import re
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from hyp3_glacier_melt.product import package_product
-from hyp3_glacier_melt.melt_pipeline import run_melt_pipeline
 from hyp3_glacier_melt.config import MeltConfig
-from hyp3_glacier_melt.paths import MeltPaths
-
+from hyp3_glacier_melt.melt_pipeline import run_melt_pipeline
+from hyp3_glacier_melt.paths import BUNDLED_RGI_ROOT, MeltPaths
+from hyp3_glacier_melt.product import package_product
 
 
 log = logging.getLogger(__name__)
@@ -19,60 +17,46 @@ log = logging.getLogger(__name__)
 def process_glacier_melt(
     datacube: str | None = None,
     output_root: str | None = None,
-    rgi_root: str | None = None,
-    rgi_shapefile: str | None = None,
+    opera_burst_id: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None, #Now using cli inputs
 ) -> Path:
-    """
-    Run the glacier melt pipeline.
-
-    If a datacube path is supplied, use it directly.
-    Otherwise, build the datacube from ASF/HyP3 first.
-    """
+    
     config = MeltConfig()
     cwd = Path.cwd()
 
     output_root = output_root or str(cwd / "output")
-    rgi_root = rgi_root or os.environ.get("RGI_ROOT") or str(cwd / "Glaciers")
-    rgi_shapefile = rgi_shapefile or os.environ.get("RGI_SHAPEFILE") or str(
-        Path(rgi_root) / "RGI2000-v7.0-G-01_alaska" / "RGI2000-v7.0-G-01_alaska.shp"
-    )
 
-    if datacube is not None:
-        datacube_path = Path(datacube)
-        log.info("Running melt pipeline on existing datacube: %s", datacube_path)
-    else:
-        log.info("No datacube provided; building one from ASF/HyP3 first")
-
-        from hyp3_glacier_melt.hyp3_datacube.create_datacube import (
-            DatacubeBuildConfig,
-            build_datacube,
+    if datacube is None:
+        raise ValueError(
+            "A datacube is required; the CLI must download the OPERA data "
+            "and generate the datacube before melt processing."
         )
 
-        dc_cfg = DatacubeBuildConfig(
-            rgi_shapefile=Path(rgi_shapefile),
-            scene_name=config.scene_name,
-            epsg_no=config.epsg_no,
-            path_frame_dict=config.path_frame_dict,
-            direction=None,
-            pol=config.pol_str,
-            start_date="2017-01-01",
-            end_date="2024-12-31",
-            out_nc_dir=cwd / "datacubes",
-            cache_dir=cwd / "hyp3_cache",
-            resample_alg="bilinear",
-        )
-
-        datacube_path = build_datacube(dc_cfg)
-        log.info("Built datacube: %s", datacube_path)
+    datacube_path = Path(datacube)
+    log.info("Running melt pipeline on datacube: %s", datacube_path)
 
 
     final_output_root = Path(output_root or cwd / "output")
     final_output_root.mkdir(parents=True, exist_ok=True)
 
+
+    #Generate .zip file name
+    
+    source_description = datacube_path.stem
+
+    if opera_burst_id and start_date and end_date:
+        normalized_burst_id = opera_burst_id.replace("-", "_")
+        normalized_start_date = start_date.replace("-", "")
+        normalized_end_date = end_date.replace("-", "")
+        source_description = (
+            f"{normalized_burst_id}_{normalized_start_date}_{normalized_end_date}"
+        )
+
     source_id = re.sub(
         r"[^A-Za-z0-9._-]+",
         "_",
-        datacube_path.stem,
+        source_description,
     ).strip("._-")
 
 
@@ -83,28 +67,36 @@ def process_glacier_melt(
         dir=final_output_root,
     ) as staging_directory:
         staging_paths = MeltPaths(
-            rgi_root=rgi_root,
-            rgi_shapefile=rgi_shapefile,
+            rgi_root=BUNDLED_RGI_ROOT,
             output_root=staging_directory,
         )
 
         result = run_melt_pipeline(
             datacube_path,
             config,
-            staging_paths,
+            staging_paths, 
         )
 
+        metadata = {
+            "source_id": source_id,
+            "polarization": config.pol_str,
+            "pixel_spacing_x_m": config.xres,
+            "pixel_spacing_y_m": config.yres,
+            "use_spatial_tiling": config.use_spatial_tiling,
+        }
+
+        if opera_burst_id is not None:
+            metadata["opera_burst_id"] = opera_burst_id
+        if start_date is not None:
+            metadata["start_date"] = start_date
+        if end_date is not None:
+            metadata["end_date"] = end_date
+        
         product_file = package_product(
             result=result,
             product_name=product_name,
             output_root=final_output_root,
-            metadata={
-                "source_id": source_id,
-                "polarization": config.pol_str,
-                "pixel_spacing_x_m": config.xres,
-                "pixel_spacing_y_m": config.yres,
-                "use_spatial_tiling": config.use_spatial_tiling,
-            },
+            metadata=metadata,
         )
 
     return product_file

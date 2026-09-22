@@ -20,7 +20,12 @@ def test_package_product_contains_only_explicit_files(tmp_path: Path) -> None:
     csv_a = write_csv(tmp_path / 'run' / 'glacier_1.csv')
     csv_b = write_csv(tmp_path / 'run' / 'glacier_2.csv')
     write_csv(tmp_path / 'run' / 'stale.csv')
-    result = MeltRunResult(scenes=3, csv_files=[csv_b, csv_a], failed_glacnos={})
+    result = MeltRunResult(
+        scenes=3,
+        csv_files=[csv_b, csv_a],
+        failed_glacnos={},
+        tiff_files=[],
+    )
 
     product_path = package_product(
         result,
@@ -54,6 +59,7 @@ def test_package_product_records_partial_status(tmp_path: Path) -> None:
         scenes=3,
         csv_files=[csv_file],
         failed_glacnos={42: 'ValueError: test failure'},
+        tiff_files=[],
     )
 
     product_path = package_product(result, 'partial_product', tmp_path, {})
@@ -67,7 +73,12 @@ def test_package_product_records_partial_status(tmp_path: Path) -> None:
 
 
 def test_package_product_rejects_empty_result(tmp_path: Path) -> None:
-    result = MeltRunResult(scenes=3, csv_files=[], failed_glacnos={})
+    result = MeltRunResult(
+        scenes=3,
+        csv_files=[],
+        failed_glacnos={},
+        tiff_files=[],
+    )
 
     with pytest.raises(RuntimeError, match='produced no CSV'):
         package_product(result, 'empty_product', tmp_path, {})
@@ -78,6 +89,7 @@ def test_package_product_rejects_missing_csv(tmp_path: Path) -> None:
         scenes=3,
         csv_files=[tmp_path / 'missing.csv'],
         failed_glacnos={},
+        tiff_files=[],
     )
 
     with pytest.raises(FileNotFoundError, match='does not exist'):
@@ -87,7 +99,12 @@ def test_package_product_rejects_missing_csv(tmp_path: Path) -> None:
 def test_package_product_rejects_duplicate_filenames(tmp_path: Path) -> None:
     csv_a = write_csv(tmp_path / 'a' / 'same.csv')
     csv_b = write_csv(tmp_path / 'b' / 'same.csv')
-    result = MeltRunResult(scenes=3, csv_files=[csv_a, csv_b], failed_glacnos={})
+    result = MeltRunResult(
+        scenes=3,
+        csv_files=[csv_a, csv_b],
+        failed_glacnos={},
+        tiff_files=[],
+    )
 
     with pytest.raises(ValueError, match='Duplicate CSV filenames'):
         package_product(result, 'duplicate_product', tmp_path, {})
@@ -95,8 +112,37 @@ def test_package_product_rejects_duplicate_filenames(tmp_path: Path) -> None:
 
 def test_package_product_refuses_to_overwrite(tmp_path: Path) -> None:
     csv_file = write_csv(tmp_path / 'glacier.csv')
-    result = MeltRunResult(scenes=3, csv_files=[csv_file], failed_glacnos={})
+    result = MeltRunResult(
+        scenes=3,
+        csv_files=[csv_file],
+        failed_glacnos={},
+        tiff_files=[],
+    )
     package_product(result, 'existing_product', tmp_path, {})
 
     with pytest.raises(FileExistsError, match='already exists'):
         package_product(result, 'existing_product', tmp_path, {})
+
+
+def test_package_product_includes_doy_maps(tmp_path: Path) -> None:
+    csv_file = write_csv(tmp_path / 'glacier.csv')
+    tiff_file = tmp_path / 'melt_onset_doy_2024.tif'
+    tiff_file.write_bytes(b'test tiff')
+    result = MeltRunResult(
+        scenes=3,
+        csv_files=[csv_file],
+        failed_glacnos={},
+        tiff_files=[tiff_file],
+    )
+
+    product_path = package_product(result, 'doy_product', tmp_path / 'products', {})
+
+    with ZipFile(product_path) as archive:
+        assert 'doy_product/doy_maps/melt_onset_doy_2024.tif' in archive.namelist()
+        metadata = json.loads(archive.read('doy_product/product_metadata.json'))
+
+    assert metadata['doy_map_count'] == 1
+    assert metadata['files'] == [
+        'doy_maps/melt_onset_doy_2024.tif',
+        'glacier.csv',
+    ]

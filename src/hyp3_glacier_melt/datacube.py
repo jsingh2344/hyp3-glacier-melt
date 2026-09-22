@@ -33,6 +33,12 @@ def _one_based_day_of_year(dates: pd.DatetimeIndex) -> list[int]:
     return pd.DatetimeIndex(dates).dayofyear.astype(int).tolist()
 
 
+def _glacier_time_series_path(
+    output_dir: str | os.PathLike[str], rgi_id: str, period: int | str
+) -> Path:
+    return Path(output_dir) / f'melt_snowline_time_series_{rgi_id}_{period}.csv'
+
+
 class sar_datacube():
 
     def __init__(self, 
@@ -77,20 +83,12 @@ class sar_datacube():
         self.ds = ds.isel(y=subset_y, x=subset_x)
         
         
-        self.data = (ds.images.isel(y=subset_y, x=subset_x)).values
-        if not nan_filter is None:
-            self.data[self.data < nan_filter] = np.nan
-        mask_good_pixels = np.sum(self.data, axis=0)
-        mask_good_pixels[~np.isnan(mask_good_pixels)] = 1
-        self.mask_good_pixels = mask_good_pixels
-        self.data_good = self.data * self.mask_good_pixels[np.newaxis,:,:]
-        
+        self.load_image_data(nan_filter) #Sets 3d data_good and 2d valid_pixel_mask
         self.dates = self.ds.time.values
 
         #self.mask_values = self.ds.rgi_ind_glacier_mask.values
         self.mask_values = (ds.rgi_ind_glacier_mask.isel(y=subset_y, x=subset_x)).values
         self.dem = self.ds.dem.values
-        self.dem = (ds.dem.isel(y=subset_y, x=subset_x)).values
         self.xres = xres
         self.yres = yres
 
@@ -138,7 +136,72 @@ class sar_datacube():
         self.allmelt_threshold = allmelt_threshold
         self.allmelt_pixels = allmelt_pixels
         self.min_area_frac = min_area_frac
-    
+
+    def load_image_data(self, nan_filter): 
+        """Load and prepare the image time series for the selected spatial subset."""
+        self.data = self.ds.images.values
+
+        if nan_filter is not None:
+            self.data[self.data < nan_filter] = np.nan
+
+        self.valid_pixel_mask = np.all(~np.isnan(self.data), axis=0)
+
+        self.mask_good_pixels = np.where(
+            self.valid_pixel_mask,
+            1.0,
+            np.nan,
+        )
+        self.data_good = np.where(
+            self.valid_pixel_mask[np.newaxis, :, :],
+            self.data,
+            np.nan,
+        )
+
+    def candidate_glaciers(self):
+        # Find glaciers using only rgi mask
+        
+        glacnos = sorted(list(np.unique(self.mask_values)))[1:]
+        glacnos_str = [
+            f"{self.rgi_reg}.{str(glacno).zfill(5)}"
+            for glacno in glacnos
+        ]
+
+        if not glacnos_str:
+            return pd.DataFrame(columns=["glacno", "ds_area_frac", "rgino_str"])
+
+        main_glac_rgi_raw = selectglaciersrgitable(
+            rgi_fp=self.paths.rgi_root,
+            rgi_cols_drop=self.rgi_cols_drop,
+            glac_no=glacnos_str,
+            min_glac_area_km2=self.min_glac_area_km2,
+        )
+
+        if main_glac_rgi_raw.empty:
+            return main_glac_rgi_raw
+
+        glacnos_raw = list(main_glac_rgi_raw.glacno.values)
+
+        glacno_edges = (
+            list(np.unique(self.mask_values[0, :]))
+            + list(np.unique(self.mask_values[-1, :]))
+            + list(np.unique(self.mask_values[:, 0]))
+            + list(np.unique(self.mask_values[:, -1]))
+        )
+        glacno_edges = list(np.unique(np.array(glacno_edges)))
+
+        if 0 in glacno_edges:
+            glacno_edges.remove(0)
+
+        candidate_glacnos = [
+            glacno for glacno in glacnos_raw
+            if glacno not in glacno_edges
+        ]
+        candidate_indices = [
+            glacnos_raw.index(glacno)
+            for glacno in candidate_glacnos
+        ]
+
+        return main_glac_rgi_raw.loc[candidate_indices].reset_index(drop=True)
                
     def glacnos_to_process(self) -> pd.DataFrame:
         """
@@ -187,7 +250,11 @@ class sar_datacube():
             area_ds = np.where(self.mask_values == glacno)[0].shape[0] * self.xres * self.yres / 1e6
             area_ds_frac = area_ds / area_km2
             
-            area_sar = np.where(~np.isnan(self.data_good[0,:,:][np.where(self.mask_values == glacno)]))[0].shape[0] * self.xres * self.yres / 1e6
+            glacier_pixel_mask = self.mask_values == glacno
+            valid_glacier_pixels = np.count_nonzero(
+                self.valid_pixel_mask & glacier_pixel_mask
+            )
+            area_sar = valid_glacier_pixels * self.xres * self.yres / 1e6
             area_sar_frac = area_sar / area_km2
             if area_ds_frac > self.min_area_frac and area_sar_frac > self.min_area_frac:
                 glacnos_2process.append(glacno)
@@ -497,7 +564,7 @@ class sar_datacube():
 
             self.snowline_onset_doy_maps[year] = data_sl_cp_year_onset_doy
 
-    def generate_elevs_from_onsets(self, glacno, out_dir, 
+    def generate_elevs_from_onsets(self, glacno, out_dir, rgi_id,
                                                 doy_step=10,
                                                 percentile=1.0,
                                                 min_valid_frac=0.01,
@@ -703,7 +770,7 @@ class sar_datacube():
 
             df["glacier_max_elev_m"] = max_elev
 
-            csv_path = os.path.join(out_dir, f"melt_snowline_time_series_{glacno}_{year}.csv")
+            csv_path = _glacier_time_series_path(out_dir, rgi_id, year)
             df.to_csv(csv_path, index=False)
             yearly_csv_paths.append(csv_path)
 
@@ -722,10 +789,7 @@ class sar_datacube():
                 if "date" in merged_df.columns:
                     merged_df = merged_df.sort_values("date").reset_index(drop=True)
 
-                merged_csv_path = os.path.join(
-                    out_dir,
-                    f"melt_snowline_time_series_{glacno}_all_years.csv"
-                )
+                merged_csv_path = _glacier_time_series_path(out_dir, rgi_id, "all_years")
                 merged_df.to_csv(merged_csv_path, index=False)
 
                 for csv_path in yearly_csv_paths:
