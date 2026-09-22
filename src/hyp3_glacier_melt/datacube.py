@@ -158,9 +158,16 @@ class sar_datacube():
         )
 
     def candidate_glaciers(self):
-        # Find glaciers using only rgi mask
-        
-        glacnos = sorted(list(np.unique(self.mask_values)))[1:]
+        """Return all qualifying glaciers present in the RGI mask.
+
+        Glaciers touching the datacube boundary are included so their partial
+        DOY maps can later be combined with maps from neighboring bursts.
+        """
+
+        glacnos = sorted(list(np.unique(self.mask_values)))
+        if 0 in glacnos:
+            glacnos.remove(0)
+
         glacnos_str = [
             f"{self.rgi_reg}.{str(glacno).zfill(5)}"
             for glacno in glacnos
@@ -179,29 +186,7 @@ class sar_datacube():
         if main_glac_rgi_raw.empty:
             return main_glac_rgi_raw
 
-        glacnos_raw = list(main_glac_rgi_raw.glacno.values)
-
-        glacno_edges = (
-            list(np.unique(self.mask_values[0, :]))
-            + list(np.unique(self.mask_values[-1, :]))
-            + list(np.unique(self.mask_values[:, 0]))
-            + list(np.unique(self.mask_values[:, -1]))
-        )
-        glacno_edges = list(np.unique(np.array(glacno_edges)))
-
-        if 0 in glacno_edges:
-            glacno_edges.remove(0)
-
-        candidate_glacnos = [
-            glacno for glacno in glacnos_raw
-            if glacno not in glacno_edges
-        ]
-        candidate_indices = [
-            glacnos_raw.index(glacno)
-            for glacno in candidate_glacnos
-        ]
-
-        return main_glac_rgi_raw.loc[candidate_indices].reset_index(drop=True)
+        return main_glac_rgi_raw.reset_index(drop=True)
                
     def glacnos_to_process(self) -> pd.DataFrame:
         """
