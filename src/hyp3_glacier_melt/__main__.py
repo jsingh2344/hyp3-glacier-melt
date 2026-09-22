@@ -87,7 +87,13 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    burst_ids = args.opera_burst_ids or []
+    burst_ids = []
+
+    # HyP3 passes array parameters to the container as one space-separated value.
+    # Splitting each value also keeps repeated local --opera-burst-id flags working.
+    for value in args.opera_burst_ids or []:
+        burst_ids.extend(value.split())
+
     config = MeltConfig()
 
     logging.basicConfig(
