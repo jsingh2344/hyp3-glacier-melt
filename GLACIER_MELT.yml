@@ -35,7 +35,7 @@ GLACIER_MELT:
   steps:
     - name: ''
       image: ghcr.io/jsingh2344/hyp3-glacier-melt
-      image_tag: '0.1.0'
+      image_tag: test
 
       command:
         - --bucket
