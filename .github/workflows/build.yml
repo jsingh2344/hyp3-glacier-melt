@@ -12,23 +12,45 @@ on:
       - develop
 
 jobs:
-  call-version-info-workflow:
-    # Docs: https://github.com/ASFHyP3/actions
-    uses: ASFHyP3/actions/.github/workflows/reusable-version-info.yml@v0.21.0
+  version_info:
+    name: Version info
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    with:
-      python_version: '3.10'
+    outputs:
+      version_tag: ${{ steps.version.outputs.version_tag }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Install versioning dependency
+        run: python -m pip install 'setuptools-scm[toml]>=6.2'
+
+      - name: Determine image tag
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(python -m setuptools_scm)
+          echo "version_tag=${VERSION//+/_}" >> "$GITHUB_OUTPUT"
+          echo "Version: ${VERSION}"
 
   call-docker-ghcr-workflow:
-    needs: call-version-info-workflow
+    needs: version_info
     # Docs: https://github.com/ASFHyP3/actions
     uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@v0.21.0
     permissions:
       contents: read
       packages: write
     with:
-      version_tag: ${{ needs.call-version-info-workflow.outputs.version_tag }}
+      version_tag: ${{ needs.version_info.outputs.version_tag }}
       user: ${{ github.actor }}
     secrets:
       USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
