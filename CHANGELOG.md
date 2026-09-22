@@ -10,3 +10,4 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - hyp3-glacier-melt plugin created with the [HyP3 Cookiecutter](https://github.com/ASFHyP3/hyp3-cookiecutter)
+- Updated glacier melt processing workflow
