@@ -15,4 +15,4 @@ jobs:
       user: jsingh2344
       email: jadens@andrew.cmu.edu
     secrets:
-      USER_TOKEN: ${{ secrets.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4 }}
+      USER_TOKEN: ${{ secrets.JSINGH2344_PAK }}

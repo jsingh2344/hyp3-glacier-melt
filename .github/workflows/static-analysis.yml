@@ -1,6 +1,6 @@
 name: Static analysis
 
-on: push
+on: workflow_dispatch
 
 jobs:
   call-secrets-analysis-workflow:

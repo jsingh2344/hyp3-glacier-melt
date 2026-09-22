@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - asf_search
   - python>=3.10
   - pip
   - rasterio
@@ -12,6 +13,8 @@ dependencies:
   - xarray
   - scipy
   - pandas
+  - matplotlib
+  - pillow
   - geopandas
   - tqdm
   # For packaging, and testing
@@ -21,7 +24,7 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   # For running
-  - hyp3lib>=3,<4
+  - hyp3lib>=3.2,<4
   # TODO: insert conda-forge dependencies as list here
   - pip:
-      - -r requirements-static.txt
+        - -r requirements-static.txt
