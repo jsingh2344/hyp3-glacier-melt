@@ -111,12 +111,13 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
                         rgi_cols_drop=config.rgi_cols_drop,
                         paths=paths)
 
-        # Load glaciers to process
+        # Load glaciers for the DOY maps and the glacier CSVs.
         try:
+            map_glac_rgi = dc.candidate_glaciers()
             main_glac_rgi = dc.glacnos_to_process()
         except Exception:
             log.exception(
-                "glacnos_to_process failed for tile y[%s:%s], x[%s:%s]",
+                "Glacier selection failed for tile y[%s:%s], x[%s:%s]",
                 y0,
                 y1,
                 x0,
@@ -124,9 +125,9 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
             )
             continue
 
-        if main_glac_rgi.empty:
+        if map_glac_rgi.empty:
             log.info(
-                "No suitable glaciers for tile y[%s:%s], x[%s:%s]; skipping",
+                "No glaciers found for tile y[%s:%s], x[%s:%s]; skipping",
                 y0,
                 y1,
                 x0,
@@ -135,12 +136,13 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
             continue
         
         #if verbose: 
-        print("Glaciers in tile:", main_glac_rgi.rgino_str.values)
+        print("Glaciers included in DOY maps:", len(map_glac_rgi))
+        print("Glaciers included in CSV output:", len(main_glac_rgi))
         # if '01.05589' not in main_glac_rgi.rgino_str.values:
         #     continue
     
         # Remove pixels from non-glaciated areas
-        dc.mask_nonglacier_pixels(main_glac_rgi)
+        dc.mask_nonglacier_pixels(map_glac_rgi)
     
         # PIXEL-BY-PIXEL ANALYSIS
         dc.pixel_analysis()
