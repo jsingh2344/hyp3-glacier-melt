@@ -15,6 +15,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 import os
 
 from hyp3_glacier_melt.config import MeltConfig
+from hyp3_glacier_melt.doy_product import create_and_write_doy_products
 from hyp3_glacier_melt.paths import MeltPaths
 from hyp3_glacier_melt.datacube import sar_datacube
 from hyp3_glacier_melt.rgi import selectglaciersrgitable
@@ -49,6 +50,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
     # Process Datasets
     failed_glacnos: dict[int, str] = {}
     generated_csv_files: list[Path] = []
+    generated_doy_files: list[Path] = []
     ds_fn = datacube_path
     # Path/Row string used for filenames
     pathrow_str = str(ds_fn).split('.nc')[0].split(config.pol_str)[1][1:]
@@ -82,7 +84,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
 
     for subset_y, subset_x, y0, y1, x0, x1 in tqdm(spatial_subsets):
 
-    #for subset_y, subset_x, y0, y1, x0, x1 in [(slice(500, 1000), slice(1500, 2000), -1, -1, -1, -1)]: #5589!
+    #for subset_y, subset_x, y0, y1, x0, x1 in [(slice(500, 1000), slice(1500, 2000), -1, -1, -1, -1)]: #5589 run
 
         print(f"\n=== ds_fn={ds_fn}, tile y[{y0}:{y1}], x[{x0}:{x1}] ===")
         
@@ -147,6 +149,18 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         dc.annual_snowline_onset_map() 
         dc.annual_second_onset_map()
 
+        # Write to tiff :
+
+        for year in sorted(dc.melt_onset_doy_maps.keys()):
+            doy_files = create_and_write_doy_products(
+                datacube=dc,
+                year=year,
+                output_dir=paths.onset_dir,
+            )
+
+            for doy_file in doy_files:
+                generated_doy_files.append(Path(doy_file))
+
         # SINGLE GLACIER ANALYSIS
         for nglac, glacno in enumerate(
             tqdm(
@@ -171,6 +185,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
 
                 #dc.plot_pixel_timeseries(glacno, 195, 75)
                 csv_file = dc.generate_elevs_from_onsets(glacno, paths.csv_dir,
+                                                rgi_id=rgino_str,
                                                 doy_step=10,
                                                 percentile=1.0,
                                                 min_valid_frac=0.01,
@@ -186,6 +201,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         scenes=nt,
         csv_files=generated_csv_files,
         failed_glacnos=failed_glacnos,
+        tiff_files=generated_doy_files,
     )
 
 

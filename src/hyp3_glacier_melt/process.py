@@ -1,17 +1,14 @@
 """glacier melt processing."""
 
 import logging
-from pathlib import Path
-import os
-from tempfile import TemporaryDirectory
 import re
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from hyp3_glacier_melt.product import package_product
-from hyp3_glacier_melt.melt_pipeline import run_melt_pipeline
 from hyp3_glacier_melt.config import MeltConfig
-from hyp3_glacier_melt.paths import MeltPaths
-
-
+from hyp3_glacier_melt.melt_pipeline import run_melt_pipeline
+from hyp3_glacier_melt.paths import BUNDLED_RGI_ROOT, MeltPaths
+from hyp3_glacier_melt.product import package_product
 
 
 log = logging.getLogger(__name__)
@@ -20,26 +17,15 @@ log = logging.getLogger(__name__)
 def process_glacier_melt(
     datacube: str | None = None,
     output_root: str | None = None,
-    rgi_root: str | None = None,
-    rgi_shapefile: str | None = None,
     opera_burst_id: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None, #Now using cli inputs
 ) -> Path:
-    """
-    Run the glacier melt pipeline.
-
-    If a datacube path is supplied, use it directly.
-    Otherwise, build the datacube from ASF/HyP3 first.
-    """
+    
     config = MeltConfig()
     cwd = Path.cwd()
 
     output_root = output_root or str(cwd / "output")
-    rgi_root = rgi_root or os.environ.get("RGI_ROOT") or str(cwd / "Glaciers")
-    rgi_shapefile = rgi_shapefile or os.environ.get("RGI_SHAPEFILE") or str(
-        Path(rgi_root) / "RGI2000-v7.0-G-01_alaska" / "RGI2000-v7.0-G-01_alaska.shp"
-    )
 
     if datacube is None:
         raise ValueError(
@@ -81,15 +67,14 @@ def process_glacier_melt(
         dir=final_output_root,
     ) as staging_directory:
         staging_paths = MeltPaths(
-            rgi_root=rgi_root,
-            rgi_shapefile=rgi_shapefile,
+            rgi_root=BUNDLED_RGI_ROOT,
             output_root=staging_directory,
         )
 
         result = run_melt_pipeline(
             datacube_path,
             config,
-            staging_paths,
+            staging_paths, 
         )
 
         metadata = {

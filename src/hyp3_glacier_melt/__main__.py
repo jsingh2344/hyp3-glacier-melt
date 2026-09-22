@@ -7,6 +7,7 @@ from pathlib import Path
 from hyp3lib.aws import upload_file_to_s3
 
 from hyp3_glacier_melt.config import MeltConfig
+from hyp3_glacier_melt.paths import BUNDLED_RGI_SHAPEFILE
 from hyp3_glacier_melt.process import process_glacier_melt
 
 
@@ -81,20 +82,6 @@ def main() -> None:
         help="Directory for melt pipeline outputs",
     )
 
-
-    # Melt pipeline auxiliary inputs/outputs
-    # parser.add_argument("--output-root", help="Directory for melt pipeline outputs") #Switched to using tmp structure
-    parser.add_argument(
-        "--rgi-root",
-        default=os.environ.get("RGI_ROOT"),
-        help="Directory containing RGI data folders; defaults to RGI_ROOT if set",
-    )
-    parser.add_argument(
-        "--rgi-shapefile",
-        default=os.environ.get("RGI_SHAPEFILE"),
-        help="Path to RGI shapefile; defaults to RGI_SHAPEFILE if set",
-    )
-
     args = parser.parse_args()
     config = MeltConfig()
 
@@ -105,7 +92,7 @@ def main() -> None:
     )
 
     # -------------------------------------------------------------------------
-    # MODE 1: Existing datacube supplied on CLI
+    # MODE 1: Existing datacube supplied on CLI (not used for docker!)
     # -------------------------------------------------------------------------
     if args.datacube:
         logging.info("Using existing datacube from CLI: %s", args.datacube)
@@ -131,11 +118,6 @@ def main() -> None:
             raise ValueError("--opera-input-dir is required when --datacube is not provided")
         if not args.opera_output_dir:
             raise ValueError("--opera-output-dir is required when --datacube is not provided")
-        if not args.rgi_shapefile:
-            raise ValueError("--rgi-shapefile is required when --datacube is not provided")
-        
-        
-
         # ---------------------------------------------------------------------
         # Optional OPERA download stage, controlled by config.py
         # ---------------------------------------------------------------------
@@ -173,14 +155,14 @@ def main() -> None:
             args.opera_input_dir = str(opera_download_dir)
 
         # ---------------------------------------------------------------------
-        # Build OPERA cube
+        # Build OPERA cube #deprecated at the moment
         # ---------------------------------------------------------------------
         from hyp3_glacier_melt.hyp3_datacube.generate_opera_cube import generate_opera_cube
 
         generated_datacube = generate_opera_cube(
             opera_input_dir=args.opera_input_dir,
             dem_path=args.opera_dem,
-            rgi_shapefile_path=args.rgi_shapefile,
+            rgi_shapefile_path=BUNDLED_RGI_SHAPEFILE,
             out_dir=args.opera_output_dir,
             polarization=config.pol_str,
             xres=config.xres,
@@ -205,8 +187,6 @@ def main() -> None:
     product_file = process_glacier_melt(
         datacube=datacube_arg,
         output_root=args.output_root,
-        rgi_root=args.rgi_root,
-        rgi_shapefile=args.rgi_shapefile,
         opera_burst_id=args.opera_burst_id, #Passing to name products after burst id
         start_date=args.start_date,
         end_date=args.end_date,

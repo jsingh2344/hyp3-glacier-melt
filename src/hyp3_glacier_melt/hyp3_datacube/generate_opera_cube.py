@@ -8,6 +8,8 @@ from netCDF4 import Dataset
 from osgeo import gdal, ogr, osr
 from tqdm import tqdm
 
+from hyp3_glacier_melt.config import MeltConfig
+
 
 gdal.UseExceptions()
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -18,23 +20,18 @@ np.seterr(all="ignore")
 # ============================================================
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+_DEFAULT_CONFIG = MeltConfig()
 
 OPERA_BURST_DIR = SCRIPT_DIR / "opera_burst_files"
 
 DEM_PATH = None
 OUT_DIR = SCRIPT_DIR / "output_nc"
-
 WRITE_DB = True
 
-# You still need this, because your shown folder structure does not include the RGI shapefile.
-RGI_SHAPEFILE_PATH = Path(
-    r"C:\Users\jaden\Downloads\Research\Glaciers\RGI2000-v7.0-G-01_alaska\RGI2000-v7.0-G-01_alaska.shp"
-)
 
 POLARIZATION = "VH"
-
-XRES = 100.0
-YRES = 100.0
+XRES = _DEFAULT_CONFIG.xres
+YRES = _DEFAULT_CONFIG.yres
 RESAMPLE_ALG = "average"
 OVERWRITE = True
 
@@ -498,8 +495,8 @@ def generate_opera_cube(
     rgi_shapefile_path,
     out_dir,
     polarization="VH",
-    xres=100.0,
-    yres=100.0,
+    xres=None,
+    yres=None,
     resample_alg="average",
     write_db=True,
     overwrite=True,
@@ -522,8 +519,8 @@ def generate_opera_cube(
     OUT_DIR = Path(out_dir)
 
     POLARIZATION = polarization
-    XRES = float(xres)
-    YRES = float(yres)
+    XRES = float(_DEFAULT_CONFIG.xres if xres is None else xres)
+    YRES = float(_DEFAULT_CONFIG.yres if yres is None else yres)
     RESAMPLE_ALG = resample_alg
     WRITE_DB = bool(write_db)
     OVERWRITE = bool(overwrite)

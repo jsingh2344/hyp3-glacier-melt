@@ -1,11 +1,17 @@
-from dataclasses import dataclass
-from pathlib import Path
 import os
+from dataclasses import dataclass
+
+
+BUNDLED_RGI_ROOT = "/opt/rgi"
+BUNDLED_RGI_SHAPEFILE = (
+    "/opt/rgi/RGI2000-v7.0-G-01_alaska/"
+    "RGI2000-v7.0-G-01_alaska.shp"
+)
+
 
 @dataclass
 class MeltPaths:
     rgi_root: str
-    rgi_shapefile: str
     output_root: str
 
     @property
