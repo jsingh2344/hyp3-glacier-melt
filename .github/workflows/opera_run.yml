@@ -26,7 +26,7 @@ jobs:
 
       - name: Pull image
         run: |
-          docker pull ghcr.io/jsingh2344/glacier-melt-local:latest
+          docker pull ghcr.io/jsingh2344/hyp3-glacier-melt:test
 
       - name: Run glacier pipeline
         run: |
@@ -40,7 +40,7 @@ jobs:
             -v /home/ubuntu/glacier-inputs/opera:/data/opera \
             -v /home/ubuntu/glacier-inputs/datacubes:/data/datacubes \
             -v /home/ubuntu/glacier-inputs/outputs:/data/output \
-            ghcr.io/jsingh2344/glacier-melt-local:latest \
+            ghcr.io/jsingh2344/hyp3-glacier-melt:test \
             --opera-burst-id "${{ github.event.inputs.opera_burst_id }}" \
             --opera-input-dir /data/opera \
             --opera-output-dir /data/datacubes \
