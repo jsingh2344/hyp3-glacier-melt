@@ -33,8 +33,10 @@ def _one_based_day_of_year(dates: pd.DatetimeIndex) -> list[int]:
     return pd.DatetimeIndex(dates).dayofyear.astype(int).tolist()
 
 
-def _glacier_time_series_path(output_dir, rgi_id, period) -> Path:
-    return Path(output_dir) / f"melt_snowline_time_series_{rgi_id}_{period}.csv"
+def _glacier_time_series_path(
+    output_dir: str | os.PathLike[str], rgi_id: str, period: int | str
+) -> Path:
+    return Path(output_dir) / f'melt_snowline_time_series_{rgi_id}_{period}.csv'
 
 
 class sar_datacube():
