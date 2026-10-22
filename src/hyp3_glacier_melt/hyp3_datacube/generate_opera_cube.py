@@ -80,7 +80,7 @@ def parse_input_paths(opera_burst_dir: Path):
         OPERA_L2_RTC-S1_..._VH.tif
         ...
 
-    DEM is handled separately through DEM_PATH, not from this folder.
+    DEM is handled separately through DEM_PATH, not from this folder
     """
     if not opera_burst_dir.exists():
         raise FileNotFoundError(f"Could not find OPERA burst directory: {opera_burst_dir}")
@@ -176,7 +176,10 @@ def verify_opera_burst_paths(
     for path in sar_paths:
         path = Path(path)
         burst_id = normalize_opera_burst_id(extract_opera_burst_id_from_filename(path))
-        paths_by_burst.setdefault(burst_id, []).append(path)
+        if burst_id not in paths_by_burst:
+            paths_by_burst[burst_id] = []
+
+        paths_by_burst[burst_id].append(path)
 
     discovered_bursts = sorted(paths_by_burst)
     if len(discovered_bursts) != 1:
@@ -489,6 +492,26 @@ def open_and_resample_to_cube_grid(src_path, epsg_str_for_cube, projwin, output_
 # MAIN
 # ============================================================
 
+def read_metric_dem(
+    dem_path: str | Path,
+    epsg_str: str,
+    output_bounds: tuple[float, float, float, float] | list[float],
+    xres: float,
+    yres: float,
+    resample_alg: str = "average",
+) -> tuple[gdal.Dataset, np.ndarray]:
+    """Prepare integer elevations using the original datacube DEM procedure."""
+    dataset = open_and_resample_to_cube_grid(
+        dem_path, epsg_str, output_bounds_to_projwin(output_bounds), output_bounds,
+        xres, yres, resample_alg,
+    )
+    values = dataset.ReadAsArray().astype(np.float32)
+    invalid = ~np.isfinite(values)
+    rounded = np.rint(values).astype(np.int16)
+    rounded[invalid] = np.int16(-32768)
+    return dataset, rounded
+
+
 def generate_opera_cube(
     opera_input_dir,
     dem_path,
@@ -502,6 +525,8 @@ def generate_opera_cube(
     overwrite=True,
     opera_burst_id=None,
 ):
+    #Set global module values for these variables here, after they are passed from main
+
     global OPERA_BURST_DIR
     global DEM_PATH
     global RGI_SHAPEFILE_PATH
@@ -536,7 +561,7 @@ def run_generate_opera_cube(expected_opera_burst_id=None):
 
     dem_path = None
     if DEM_PATH is not None:
-        if not DEM_PATH.exists():
+        if not DEM_PATH.exists(): #
             raise FileNotFoundError(f"Could not find the requested DEM: {DEM_PATH}")
         dem_path = DEM_PATH
 
@@ -546,7 +571,7 @@ def run_generate_opera_cube(expected_opera_burst_id=None):
             f"No existing OPERA {POLARIZATION} SAR .tif files found in {OPERA_BURST_DIR} "
         )
 
-    sar_paths = sort_paths_stably(sar_paths)
+    #sar_paths = sort_paths_stably(sar_paths) Unnecessary at the moment
 
     opera_burst_id = verify_opera_burst_paths(
         sar_paths,
@@ -625,27 +650,15 @@ def run_generate_opera_cube(expected_opera_burst_id=None):
         YRES,
     )
 
-    sub_gd_dem = open_and_resample_to_cube_grid(
+    sub_gd_dem, full_dem_sm = read_metric_dem(
         dem_path,
         epsg_str_for_cube,
-        projwin,
         output_bounds,
         XRES,
         YRES,
         RESAMPLE_ALG,
     )
     DEM_NODATA = np.int16(-32768)
-
-    dem_arr = sub_gd_dem.ReadAsArray().astype(np.float32)
-
-    # Preserve invalid pixels before converting to integer
-    dem_invalid = ~np.isfinite(dem_arr)
-
-    # Round to nearest meter and convert to integer
-    full_dem_sm = np.rint(dem_arr).astype(np.int16)
-
-    # Set invalid pixels to integer nodata
-    full_dem_sm[dem_invalid] = DEM_NODATA
 
     gt = sub_gd_dem.GetGeoTransform()
     min_x, pix_x_m, _, max_y, _, pix_y_m = gt

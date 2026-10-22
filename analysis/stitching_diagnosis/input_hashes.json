@@ -1,0 +1,6 @@
+{
+  "doy-inputs/HYP3_GLACIER_MELT_T014_028627_IW2_20170101_20241231.zip": "d2092345cfe5dc0c8fb8cbd70e86d4b28ce115e47efc2b3e5ad1de1f35fc30f5",
+  "doy-inputs/HYP3_GLACIER_MELT_T014_028628_IW2_20170101_20241231.zip": "a9d9f84dfac08b6c4c17708fe98a484028e00d809abfa947ac2b2cdfb8cb790f",
+  "src/hyp3_glacier_melt/doy_workflow/pipeline.py": "c813085ebe9953837fe892b66af51408166cc26c6d33b93d99cae4963c7be30e",
+  "src/hyp3_glacier_melt/datacube.py": "38136def79491e30fe9277f46d6ae9cd1ab35b85a6cd77561d219426fe0d88de"
+}

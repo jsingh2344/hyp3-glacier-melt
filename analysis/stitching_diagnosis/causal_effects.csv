@@ -1,0 +1,466 @@
+glacier,cause,metric,rows,changed,mae,max_abs
+01.05565,mask only,melt_area_m2,226,0,0.0,0.0
+01.05565,mask only,ice_area_m2,226,0,0.0,0.0
+01.05565,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05565,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05565,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05565,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05565,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05565,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05565,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05565,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05565,"DEM only, merged maps",melt_area_m2,226,23,7477.876106194691,360000.0
+01.05565,"DEM only, merged maps",ice_area_m2,226,26,5044.2477876106195,370000.0
+01.05565,"DEM only, merged maps",melt_extent_elev_m,226,226,4.352889069413717,108.60205078125
+01.05565,"DEM only, merged maps",snowline_elev_m,226,226,2.702433088184458,51.20849609375
+01.05565,"DEM only, merged maps",glacier_max_elev_m,226,226,6.990234375,6.990234375
+01.05793,mask only,melt_area_m2,226,0,0.0,0.0
+01.05793,mask only,ice_area_m2,226,0,0.0,0.0
+01.05793,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05793,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05793,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05793,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05793,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05793,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05793,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05793,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05793,"DEM only, merged maps",melt_area_m2,226,54,7610.619469026548,440000.0
+01.05793,"DEM only, merged maps",ice_area_m2,226,54,39292.03539823009,810000.0
+01.05793,"DEM only, merged maps",melt_extent_elev_m,226,226,14.177161832826327,222.937744140625
+01.05793,"DEM only, merged maps",snowline_elev_m,226,226,13.323519816440818,226.161376953125
+01.05793,"DEM only, merged maps",glacier_max_elev_m,226,226,1.918212890625,1.918212890625
+01.05874,mask only,melt_area_m2,226,0,0.0,0.0
+01.05874,mask only,ice_area_m2,226,0,0.0,0.0
+01.05874,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05874,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05874,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05874,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05874,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05874,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05874,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05874,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05874,"DEM only, merged maps",melt_area_m2,226,0,0.0,0.0
+01.05874,"DEM only, merged maps",ice_area_m2,226,20,1283.1858407079646,20000.0
+01.05874,"DEM only, merged maps",melt_extent_elev_m,226,226,1.4456949149612832,3.901123046875
+01.05874,"DEM only, merged maps",snowline_elev_m,226,226,1.4769330320105087,7.945556640625
+01.05874,"DEM only, merged maps",glacier_max_elev_m,226,226,1.718994140625,1.718994140625
+01.05558,mask only,melt_area_m2,226,0,0.0,0.0
+01.05558,mask only,ice_area_m2,226,0,0.0,0.0
+01.05558,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05558,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05558,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05558,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05558,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05558,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05558,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05558,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05558,"DEM only, merged maps",melt_area_m2,226,56,126017.69911504425,6270000.0
+01.05558,"DEM only, merged maps",ice_area_m2,226,64,126769.91150442477,6270000.0
+01.05558,"DEM only, merged maps",melt_extent_elev_m,226,226,22.1189937085177,808.32470703125
+01.05558,"DEM only, merged maps",snowline_elev_m,226,226,17.96690814262998,827.492919921875
+01.05558,"DEM only, merged maps",glacier_max_elev_m,226,226,6.862548828125,6.862548828125
+01.05880,mask only,melt_area_m2,226,0,0.0,0.0
+01.05880,mask only,ice_area_m2,226,0,0.0,0.0
+01.05880,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05880,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05880,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05880,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05880,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05880,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05880,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05880,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05880,"DEM only, merged maps",melt_area_m2,226,1,44.24778761061947,10000.0
+01.05880,"DEM only, merged maps",ice_area_m2,226,18,796.4601769911504,10000.0
+01.05880,"DEM only, merged maps",melt_extent_elev_m,226,226,0.8668250700013828,8.63134765625
+01.05880,"DEM only, merged maps",snowline_elev_m,226,226,1.122065451292865,6.531982421875
+01.05880,"DEM only, merged maps",glacier_max_elev_m,226,226,0.107421875,0.107421875
+01.05804,mask only,melt_area_m2,226,41,8584.070796460177,80000.0
+01.05804,mask only,ice_area_m2,226,108,70973.45132743364,730000.0
+01.05804,mask only,melt_extent_elev_m,226,131,13.36283185840708,79.0
+01.05804,mask only,snowline_elev_m,226,98,10.367256637168142,96.0
+01.05804,mask only,glacier_max_elev_m,226,226,78.0,78.0
+01.05804,"maps only, DEM-only mask",melt_area_m2,226,161,89690.26548672566,240000.0
+01.05804,"maps only, DEM-only mask",ice_area_m2,226,135,164867.25663716815,970000.0
+01.05804,"maps only, DEM-only mask",melt_extent_elev_m,226,161,39.22566371681416,161.0
+01.05804,"maps only, DEM-only mask",snowline_elev_m,226,134,19.030973451327434,127.0
+01.05804,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05804,"DEM only, merged maps",melt_area_m2,226,18,3008.849557522124,50000.0
+01.05804,"DEM only, merged maps",ice_area_m2,226,22,7522.123893805309,530000.0
+01.05804,"DEM only, merged maps",melt_extent_elev_m,226,226,6.0256158609305865,79.36572265625
+01.05804,"DEM only, merged maps",snowline_elev_m,226,226,2.2142479820589047,38.58837890625
+01.05804,"DEM only, merged maps",glacier_max_elev_m,226,226,4.536376953125,4.536376953125
+01.05813,mask only,melt_area_m2,226,0,0.0,0.0
+01.05813,mask only,ice_area_m2,226,0,0.0,0.0
+01.05813,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05813,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05813,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05813,"maps only, DEM-only mask",melt_area_m2,226,9,398.2300884955752,10000.0
+01.05813,"maps only, DEM-only mask",ice_area_m2,226,34,2168.141592920354,40000.0
+01.05813,"maps only, DEM-only mask",melt_extent_elev_m,226,8,0.2743362831858407,12.0
+01.05813,"maps only, DEM-only mask",snowline_elev_m,226,9,0.03982300884955752,1.0
+01.05813,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05813,"DEM only, merged maps",melt_area_m2,226,29,28716.814159292036,5710000.0
+01.05813,"DEM only, merged maps",ice_area_m2,226,45,355707.9646017699,5990000.0
+01.05813,"DEM only, merged maps",melt_extent_elev_m,226,226,20.07647705078125,287.08056640625
+01.05813,"DEM only, merged maps",snowline_elev_m,226,226,11.20721435546875,180.291748046875
+01.05813,"DEM only, merged maps",glacier_max_elev_m,226,226,7.3818359375,7.3818359375
+01.05839,mask only,melt_area_m2,226,140,442035.39823008847,1770000.0
+01.05839,mask only,ice_area_m2,226,127,592610.6194690266,1360000.0
+01.05839,mask only,melt_extent_elev_m,226,208,57.982300884955755,113.0
+01.05839,mask only,snowline_elev_m,226,226,87.28318584070796,171.0
+01.05839,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05839,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05839,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05839,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05839,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05839,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05839,"DEM only, merged maps",melt_area_m2,226,17,16991.150442477876,880000.0
+01.05839,"DEM only, merged maps",ice_area_m2,226,73,13628.318584070796,700000.0
+01.05839,"DEM only, merged maps",melt_extent_elev_m,226,226,3.032074244676438,98.100830078125
+01.05839,"DEM only, merged maps",snowline_elev_m,226,226,1.2463087233821903,37.8203125
+01.05839,"DEM only, merged maps",glacier_max_elev_m,226,226,3.929443359375,3.929443359375
+01.05582,mask only,melt_area_m2,226,141,199070.796460177,320000.0
+01.05582,mask only,ice_area_m2,226,4,707.9646017699115,90000.0
+01.05582,mask only,melt_extent_elev_m,226,90,56.03982300884956,150.0
+01.05582,mask only,snowline_elev_m,226,226,130.9203539823009,180.0
+01.05582,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05582,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05582,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05582,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05582,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05582,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05582,"DEM only, merged maps",melt_area_m2,226,12,707.9646017699115,30000.0
+01.05582,"DEM only, merged maps",ice_area_m2,226,21,1460.1769911504425,20000.0
+01.05582,"DEM only, merged maps",melt_extent_elev_m,226,226,3.8342360775027653,14.5380859375
+01.05582,"DEM only, merged maps",snowline_elev_m,226,225,1.9121579870713497,12.815185546875
+01.05582,"DEM only, merged maps",glacier_max_elev_m,226,226,7.25048828125,7.25048828125
+01.06135,mask only,melt_area_m2,226,0,0.0,0.0
+01.06135,mask only,ice_area_m2,226,0,0.0,0.0
+01.06135,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.06135,mask only,snowline_elev_m,226,0,0.0,0.0
+01.06135,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.06135,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.06135,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.06135,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.06135,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.06135,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.06135,"DEM only, merged maps",melt_area_m2,226,24,8761.061946902655,1150000.0
+01.06135,"DEM only, merged maps",ice_area_m2,226,61,14203.53982300885,910000.0
+01.06135,"DEM only, merged maps",melt_extent_elev_m,226,226,7.132734720685841,354.630615234375
+01.06135,"DEM only, merged maps",snowline_elev_m,226,226,4.994106056415929,176.690185546875
+01.06135,"DEM only, merged maps",glacier_max_elev_m,226,226,7.72998046875,7.72998046875
+01.05807,mask only,melt_area_m2,226,0,0.0,0.0
+01.05807,mask only,ice_area_m2,226,0,0.0,0.0
+01.05807,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05807,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05807,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05807,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05807,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05807,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05807,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05807,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05807,"DEM only, merged maps",melt_area_m2,226,23,1504.424778761062,90000.0
+01.05807,"DEM only, merged maps",ice_area_m2,226,50,7787.6106194690265,970000.0
+01.05807,"DEM only, merged maps",melt_extent_elev_m,226,226,2.2197562698769358,141.24609375
+01.05807,"DEM only, merged maps",snowline_elev_m,226,226,1.7952038250138274,119.184326171875
+01.05807,"DEM only, merged maps",glacier_max_elev_m,226,226,3.42138671875,3.42138671875
+01.06126,mask only,melt_area_m2,226,0,0.0,0.0
+01.06126,mask only,ice_area_m2,226,0,0.0,0.0
+01.06126,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.06126,mask only,snowline_elev_m,226,0,0.0,0.0
+01.06126,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.06126,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.06126,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.06126,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.06126,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.06126,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.06126,"DEM only, merged maps",melt_area_m2,226,65,32654.867256637168,1550000.0
+01.06126,"DEM only, merged maps",ice_area_m2,226,68,46504.42477876106,1550000.0
+01.06126,"DEM only, merged maps",melt_extent_elev_m,226,226,19.01398677319552,637.260986328125
+01.06126,"DEM only, merged maps",snowline_elev_m,226,226,22.556146942408738,672.2974853515625
+01.06126,"DEM only, merged maps",glacier_max_elev_m,226,226,6.811767578125,6.811767578125
+01.05777,mask only,melt_area_m2,226,0,0.0,0.0
+01.05777,mask only,ice_area_m2,226,0,0.0,0.0
+01.05777,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05777,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05777,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05777,"maps only, DEM-only mask",melt_area_m2,226,10,442.4778761061947,10000.0
+01.05777,"maps only, DEM-only mask",ice_area_m2,226,8,353.98230088495575,10000.0
+01.05777,"maps only, DEM-only mask",melt_extent_elev_m,226,3,0.048672566371681415,5.0
+01.05777,"maps only, DEM-only mask",snowline_elev_m,226,7,0.12389380530973451,8.0
+01.05777,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05777,"DEM only, merged maps",melt_area_m2,226,3,530.9734513274336,80000.0
+01.05777,"DEM only, merged maps",ice_area_m2,226,6,265.4867256637168,10000.0
+01.05777,"DEM only, merged maps",melt_extent_elev_m,226,226,2.357438079023783,7.325439453125
+01.05777,"DEM only, merged maps",snowline_elev_m,226,226,1.6559388827433628,18.378173828125
+01.05777,"DEM only, merged maps",glacier_max_elev_m,226,226,5.362548828125,5.362548828125
+01.05823,mask only,melt_area_m2,226,0,0.0,0.0
+01.05823,mask only,ice_area_m2,226,0,0.0,0.0
+01.05823,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05823,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05823,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05823,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05823,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05823,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05823,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05823,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05823,"DEM only, merged maps",melt_area_m2,226,24,4203.539823008849,240000.0
+01.05823,"DEM only, merged maps",ice_area_m2,226,41,2389.380530973451,20000.0
+01.05823,"DEM only, merged maps",melt_extent_elev_m,226,226,1.1881346575981748,41.457763671875
+01.05823,"DEM only, merged maps",snowline_elev_m,226,226,1.0047785666136615,6.1015625
+01.05823,"DEM only, merged maps",glacier_max_elev_m,226,226,1.641845703125,1.641845703125
+01.06128,mask only,melt_area_m2,226,0,0.0,0.0
+01.06128,mask only,ice_area_m2,226,0,0.0,0.0
+01.06128,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.06128,mask only,snowline_elev_m,226,0,0.0,0.0
+01.06128,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.06128,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.06128,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.06128,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.06128,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.06128,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.06128,"DEM only, merged maps",melt_area_m2,226,11,486.72566371681415,10000.0
+01.06128,"DEM only, merged maps",ice_area_m2,226,16,1194.6902654867256,20000.0
+01.06128,"DEM only, merged maps",melt_extent_elev_m,226,226,2.2676980347759956,8.90966796875
+01.06128,"DEM only, merged maps",snowline_elev_m,226,226,2.079564457446073,21.52294921875
+01.06128,"DEM only, merged maps",glacier_max_elev_m,226,226,4.334228515625,4.334228515625
+01.05824,mask only,melt_area_m2,226,0,0.0,0.0
+01.05824,mask only,ice_area_m2,226,0,0.0,0.0
+01.05824,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05824,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05824,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05824,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05824,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05824,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05824,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05824,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05824,"DEM only, merged maps",melt_area_m2,226,6,663.7168141592921,60000.0
+01.05824,"DEM only, merged maps",ice_area_m2,226,8,1194.6902654867256,120000.0
+01.05824,"DEM only, merged maps",melt_extent_elev_m,226,224,2.1557941267975664,44.8330078125
+01.05824,"DEM only, merged maps",snowline_elev_m,226,225,1.465357957688053,58.536376953125
+01.05824,"DEM only, merged maps",glacier_max_elev_m,226,226,2.1669921875,2.1669921875
+01.05820,mask only,melt_area_m2,226,0,0.0,0.0
+01.05820,mask only,ice_area_m2,226,0,0.0,0.0
+01.05820,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05820,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05820,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05820,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05820,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05820,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05820,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05820,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05820,"DEM only, merged maps",melt_area_m2,226,24,2300.8849557522126,60000.0
+01.05820,"DEM only, merged maps",ice_area_m2,226,33,4159.29203539823,290000.0
+01.05820,"DEM only, merged maps",melt_extent_elev_m,226,226,2.8616948760716263,58.12939453125
+01.05820,"DEM only, merged maps",snowline_elev_m,226,226,2.5810590085730087,59.239013671875
+01.05820,"DEM only, merged maps",glacier_max_elev_m,226,226,1.6591796875,1.6591796875
+01.05904,mask only,melt_area_m2,226,5,221.23893805309734,10000.0
+01.05904,mask only,ice_area_m2,226,99,8141.592920353983,20000.0
+01.05904,mask only,melt_extent_elev_m,226,74,2.84070796460177,18.0
+01.05904,mask only,snowline_elev_m,226,104,4.54424778761062,30.0
+01.05904,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05904,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05904,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05904,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05904,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05904,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05904,"DEM only, merged maps",melt_area_m2,226,11,1283.1858407079646,30000.0
+01.05904,"DEM only, merged maps",ice_area_m2,226,28,26460.17699115044,640000.0
+01.05904,"DEM only, merged maps",melt_extent_elev_m,226,226,6.902861738626936,127.482421875
+01.05904,"DEM only, merged maps",snowline_elev_m,226,226,13.282974108130531,289.305419921875
+01.05904,"DEM only, merged maps",glacier_max_elev_m,226,226,0.77880859375,0.77880859375
+01.05836,mask only,melt_area_m2,226,139,95088.49557522124,170000.0
+01.05836,mask only,ice_area_m2,226,76,89867.25663716815,350000.0
+01.05836,mask only,melt_extent_elev_m,226,171,47.57964601769911,119.0
+01.05836,mask only,snowline_elev_m,226,226,68.7433628318584,201.0
+01.05836,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05836,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05836,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05836,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05836,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05836,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05836,"DEM only, merged maps",melt_area_m2,226,72,18318.58407079646,510000.0
+01.05836,"DEM only, merged maps",ice_area_m2,226,61,78539.82300884956,680000.0
+01.05836,"DEM only, merged maps",melt_extent_elev_m,226,226,8.820592289477323,70.357177734375
+01.05836,"DEM only, merged maps",snowline_elev_m,226,226,10.615425042346516,132.654296875
+01.05836,"DEM only, merged maps",glacier_max_elev_m,226,226,3.286376953125,3.286376953125
+01.05825,mask only,melt_area_m2,226,0,0.0,0.0
+01.05825,mask only,ice_area_m2,226,0,0.0,0.0
+01.05825,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05825,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05825,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05825,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05825,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05825,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05825,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05825,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05825,"DEM only, merged maps",melt_area_m2,226,16,3185.8407079646017,480000.0
+01.05825,"DEM only, merged maps",ice_area_m2,226,68,7964.601769911505,90000.0
+01.05825,"DEM only, merged maps",melt_extent_elev_m,226,226,1.4534128914892146,29.1962890625
+01.05825,"DEM only, merged maps",snowline_elev_m,226,226,1.204259821798949,6.929931640625
+01.05825,"DEM only, merged maps",glacier_max_elev_m,226,226,2.275634765625,2.275634765625
+01.05557,mask only,melt_area_m2,226,0,0.0,0.0
+01.05557,mask only,ice_area_m2,226,0,0.0,0.0
+01.05557,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05557,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05557,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05557,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05557,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05557,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05557,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05557,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05557,"DEM only, merged maps",melt_area_m2,226,17,5221.238938053098,290000.0
+01.05557,"DEM only, merged maps",ice_area_m2,226,20,16061.946902654867,1930000.0
+01.05557,"DEM only, merged maps",melt_extent_elev_m,226,226,5.823500371612279,342.02978515625
+01.05557,"DEM only, merged maps",snowline_elev_m,226,226,4.577300215189436,341.581298828125
+01.05557,"DEM only, merged maps",glacier_max_elev_m,226,226,3.97021484375,3.97021484375
+01.05855,mask only,melt_area_m2,226,0,0.0,0.0
+01.05855,mask only,ice_area_m2,226,0,0.0,0.0
+01.05855,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05855,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05855,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05855,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05855,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05855,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05855,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05855,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05855,"DEM only, merged maps",melt_area_m2,226,44,5088.495575221239,290000.0
+01.05855,"DEM only, merged maps",ice_area_m2,226,56,7522.123893805309,80000.0
+01.05855,"DEM only, merged maps",melt_extent_elev_m,226,226,0.7266613445450775,23.86572265625
+01.05855,"DEM only, merged maps",snowline_elev_m,226,226,0.6558621836974557,9.3319091796875
+01.05855,"DEM only, merged maps",glacier_max_elev_m,226,226,0.381103515625,0.381103515625
+01.05550,mask only,melt_area_m2,226,36,5353.982300884956,50000.0
+01.05550,mask only,ice_area_m2,226,80,14115.044247787611,60000.0
+01.05550,mask only,melt_extent_elev_m,226,105,11.376106194690266,52.0
+01.05550,mask only,snowline_elev_m,226,102,16.25221238938053,91.0
+01.05550,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05550,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05550,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05550,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05550,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05550,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05550,"DEM only, merged maps",melt_area_m2,226,124,65707.96460176991,1070000.0
+01.05550,"DEM only, merged maps",ice_area_m2,226,121,104203.53982300885,1160000.0
+01.05550,"DEM only, merged maps",melt_extent_elev_m,226,226,60.30891404953678,404.245361328125
+01.05550,"DEM only, merged maps",snowline_elev_m,226,226,38.285998319102596,363.273681640625
+01.05550,"DEM only, merged maps",glacier_max_elev_m,226,226,7.587158203125,7.587158203125
+01.05878,mask only,melt_area_m2,226,144,282123.8938053097,14850000.0
+01.05878,mask only,ice_area_m2,226,68,129336.2831858407,700000.0
+01.05878,mask only,melt_extent_elev_m,226,123,9.393805309734514,47.0
+01.05878,mask only,snowline_elev_m,226,226,20.38053097345133,71.0
+01.05878,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05878,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05878,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05878,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05878,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05878,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05878,"DEM only, merged maps",melt_area_m2,226,26,6327.433628318584,180000.0
+01.05878,"DEM only, merged maps",ice_area_m2,226,109,668185.8407079646,18630000.0
+01.05878,"DEM only, merged maps",melt_extent_elev_m,226,226,38.85038338720271,1081.029296875
+01.05878,"DEM only, merged maps",snowline_elev_m,226,226,48.47579875034569,1350.57958984375
+01.05878,"DEM only, merged maps",glacier_max_elev_m,226,226,3.661865234375,3.661865234375
+01.05584,mask only,melt_area_m2,226,0,0.0,0.0
+01.05584,mask only,ice_area_m2,226,0,0.0,0.0
+01.05584,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05584,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05584,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05584,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05584,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05584,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05584,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05584,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05584,"DEM only, merged maps",melt_area_m2,226,42,18938.05309734513,190000.0
+01.05584,"DEM only, merged maps",ice_area_m2,226,58,130221.2389380531,1700000.0
+01.05584,"DEM only, merged maps",melt_extent_elev_m,226,226,42.99370311635786,481.71875
+01.05584,"DEM only, merged maps",snowline_elev_m,226,226,43.359342591952434,533.23291015625
+01.05584,"DEM only, merged maps",glacier_max_elev_m,226,226,3.788818359375,3.788818359375
+01.05559,mask only,melt_area_m2,226,0,0.0,0.0
+01.05559,mask only,ice_area_m2,226,0,0.0,0.0
+01.05559,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05559,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05559,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05559,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05559,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05559,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05559,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05559,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05559,"DEM only, merged maps",melt_area_m2,226,25,40530.97345132743,3210000.0
+01.05559,"DEM only, merged maps",ice_area_m2,226,46,728185.8407079646,9150000.0
+01.05559,"DEM only, merged maps",melt_extent_elev_m,226,226,36.995226834727596,398.73486328125
+01.05559,"DEM only, merged maps",snowline_elev_m,226,226,31.10113687430863,382.517578125
+01.05559,"DEM only, merged maps",glacier_max_elev_m,226,226,5.747802734375,5.747802734375
+01.05875,mask only,melt_area_m2,226,0,0.0,0.0
+01.05875,mask only,ice_area_m2,226,0,0.0,0.0
+01.05875,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05875,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05875,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05875,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05875,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05875,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05875,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05875,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05875,"DEM only, merged maps",melt_area_m2,226,8,1725.6637168141592,220000.0
+01.05875,"DEM only, merged maps",ice_area_m2,226,15,973.4513274336283,40000.0
+01.05875,"DEM only, merged maps",melt_extent_elev_m,226,226,1.040526803615874,20.661376953125
+01.05875,"DEM only, merged maps",snowline_elev_m,226,226,0.7699725395810287,3.648193359375
+01.05875,"DEM only, merged maps",glacier_max_elev_m,226,226,1.047119140625,1.047119140625
+01.05862,mask only,melt_area_m2,226,0,0.0,0.0
+01.05862,mask only,ice_area_m2,226,0,0.0,0.0
+01.05862,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05862,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05862,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05862,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05862,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05862,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05862,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05862,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05862,"DEM only, merged maps",melt_area_m2,226,13,840.70796460177,60000.0
+01.05862,"DEM only, merged maps",ice_area_m2,226,17,1327.4336283185842,50000.0
+01.05862,"DEM only, merged maps",melt_extent_elev_m,226,226,4.764398895533739,76.1767578125
+01.05862,"DEM only, merged maps",snowline_elev_m,226,226,3.4165233510785398,48.383056640625
+01.05862,"DEM only, merged maps",glacier_max_elev_m,226,226,5.419189453125,5.419189453125
+01.05785,mask only,melt_area_m2,226,87,3849.5575221238937,10000.0
+01.05785,mask only,ice_area_m2,226,14,796.4601769911504,20000.0
+01.05785,mask only,melt_extent_elev_m,226,42,4.022123893805309,42.0
+01.05785,mask only,snowline_elev_m,226,85,3.743362831858407,37.0
+01.05785,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05785,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05785,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05785,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05785,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05785,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05785,"DEM only, merged maps",melt_area_m2,226,14,929.2035398230089,60000.0
+01.05785,"DEM only, merged maps",ice_area_m2,226,19,9557.522123893805,750000.0
+01.05785,"DEM only, merged maps",melt_extent_elev_m,226,226,7.034137016904038,225.00146484375
+01.05785,"DEM only, merged maps",snowline_elev_m,226,226,3.1466134670561394,188.77001953125
+01.05785,"DEM only, merged maps",glacier_max_elev_m,226,226,4.538818359375,4.538818359375
+01.05583,mask only,melt_area_m2,226,141,187256.6371681416,310000.0
+01.05583,mask only,ice_area_m2,226,5,3053.097345132743,510000.0
+01.05583,mask only,melt_extent_elev_m,226,88,25.287610619469028,140.0
+01.05583,mask only,snowline_elev_m,226,226,94.23008849557522,159.0
+01.05583,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05583,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05583,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05583,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05583,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05583,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05583,"DEM only, merged maps",melt_area_m2,226,70,8230.08849557522,60000.0
+01.05583,"DEM only, merged maps",ice_area_m2,226,62,12433.628318584071,90000.0
+01.05583,"DEM only, merged maps",melt_extent_elev_m,226,226,8.784637181104811,57.60791015625
+01.05583,"DEM only, merged maps",snowline_elev_m,226,226,4.860347781561117,29.760009765625
+01.05583,"DEM only, merged maps",glacier_max_elev_m,226,226,7.13671875,7.13671875
+01.05594,mask only,melt_area_m2,226,0,0.0,0.0
+01.05594,mask only,ice_area_m2,226,0,0.0,0.0
+01.05594,mask only,melt_extent_elev_m,226,0,0.0,0.0
+01.05594,mask only,snowline_elev_m,226,0,0.0,0.0
+01.05594,mask only,glacier_max_elev_m,226,0,0.0,0.0
+01.05594,"maps only, DEM-only mask",melt_area_m2,226,0,0.0,0.0
+01.05594,"maps only, DEM-only mask",ice_area_m2,226,0,0.0,0.0
+01.05594,"maps only, DEM-only mask",melt_extent_elev_m,226,0,0.0,0.0
+01.05594,"maps only, DEM-only mask",snowline_elev_m,226,0,0.0,0.0
+01.05594,"maps only, DEM-only mask",glacier_max_elev_m,226,0,0.0,0.0
+01.05594,"DEM only, merged maps",melt_area_m2,226,3,796.4601769911504,80000.0
+01.05594,"DEM only, merged maps",ice_area_m2,226,3,221.23893805309734,30000.0
+01.05594,"DEM only, merged maps",melt_extent_elev_m,226,226,2.7223435123409847,86.031494140625
+01.05594,"DEM only, merged maps",snowline_elev_m,226,226,1.097024833206582,6.297119140625
+01.05594,"DEM only, merged maps",glacier_max_elev_m,226,226,4.46044921875,4.46044921875

@@ -85,4 +85,44 @@ RGI 7.0 is distributed under the CC BY 4.0 license. Cite the dataset as: RGI 7.0
 
 ## DEM dependency
 
-When building a datacube from OPERA RTC-S1 files, the workflow creates a Copernicus GLO-30 DEM covering the verified burst footprint using `hyp3lib.dem.prepare_dem_geotiff`. The DEM is produced at 30 m resolution in the OPERA burst projection with elevations relative to mean sea level, then resampled onto the datacube grid. Supplying `--opera-dem` uses that local GeoTIFF instead of sourcing a DEM automatically.
+When building a datacube from OPERA RTC-S1 files, the workflow creates a Copernicus GLO-30 DEM covering the verified burst footprint using `hyp3lib.dem.prepare_dem_geotiff`. The DEM is projected to 30 m with cubic interpolation, with elevations relative to mean sea level, then averaged onto the datacube grid and rounded to integer metres. The primary and downstream containers share the same GDAL routine for this final grid conversion. Supplying `--opera-dem` uses that local GeoTIFF instead of sourcing a DEM automatically.
+
+## DOY-only downstream container
+
+The `hyp3_glacier_melt.doy_workflow` package contains the downstream workflow, including its Dockerfile. It builds a second container that accepts only the annual DOY maps emitted by one or more runs of the main container. Its new code is limited to discovering inputs, stitching burst rasters, preparing the DEM/RGI grid, and adapting those arrays to the existing glacier metric implementation. Melt extents, snowlines, areas, fractions, and CSV formatting are still calculated by `sar_datacube.generate_elevs_from_onsets`.
+
+New source products also include `validity_mask_doy_YEAR.tif` (the original
+all-acquisition SAR validity mask) and `metric_dem_doy_YEAR.tif` (the exact DEM
+used for the source metrics). The validity raster also records the original acquisition dates. The downstream workflow masks each source before
+merging, unions valid coverage, and applies that same validity to event maps and
+elevation distributions. It uses the embedded DEM unless `--dem` is supplied;
+external DEMs go through the exact same GDAL resampling and integer conversion function as the primary container. An external DEM keeps its own upstream preparation history; changing it can change metrics. In overlaps, event
+maps retain the earliest valid DOY, and DEM priority is deterministic by source
+bounds and then content. This is a fusion rule, so independent sources can still
+produce different metrics after stitching. The current metric adapter requires
+validity and embedded DEMs to be consistent across years.
+
+The default requires the source validity mask, native metric DEM and acquisition
+calendar so the original calculation can be reproduced. Re-export old products
+with the updated primary container to retain these inputs. `--doy-step` explicitly
+selects a regular evaluation grid and allows legacy approximate processing, with
+a warning if original validity is unavailable. Adding companions to only some
+sources is rejected. A missing event value does not identify missing observation
+coverage: valid observations can have no detected event.
+
+
+Each `--doy-input` may be a prior product ZIP, a directory containing DOY maps or ZIP products, or one DOY GeoTIFF. Repeat the option for inputs in different locations, or point it at one directory containing every burst product:
+
+```bash
+docker build -f src/hyp3_glacier_melt/doy_workflow/Dockerfile -t hyp3-glacier-melt-doy .
+docker run --rm \
+  -v "$PWD/inputs:/inputs:ro" \
+  -v "$PWD/output:/output" \
+  hyp3-glacier-melt-doy \
+  --doy-input /inputs \
+  --output-root /output
+```
+
+For each year and map type, adjacent rasters are mosaicked onto their shared projected grid. Where bursts overlap, the earliest finite onset DOY is retained. All inputs must use the same CRS and pixel size, and all four metric inputs must be present for every year: `melt_onset`, `ice_onset`, `spring_baseline`, and `second_melt_onset`. The `minimum_backscatter` map may be present but is not needed after onset generation.
+
+By default, the container evaluates the unchanged metric code on the source acquisition dates, using their union when sources have different calendars. `--start-doy` and `--end-doy` filter those dates; `--doy-step` explicitly requests a regular DOY grid instead. The native source DEM is reused by default, preserving the complete upstream preparation. In explicit legacy mode, an omitted DEM is prepared by the primary workflow's cubic-to-30 m, average-to-analysis-grid procedure. The Alaska RGI is bundled in the same way as the primary image. Overlapping tiles of identical observations must reproduce the single-source result; independently observed bursts may produce different metrics because stitching combines their observations.

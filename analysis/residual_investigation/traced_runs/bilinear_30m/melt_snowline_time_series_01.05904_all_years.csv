@@ -1,0 +1,2 @@
+year,date,melt_extent_elev_m,snowline_elev_m,ice_area_m2,melt_area_m2,melt_fraction,ice_fraction,glacier_area_m2,glacier_max_elev_m
+2017,2017-12-25,3180.0,3036.0,1790000.0,2410000.0,0.9836734693877552,0.7306122448979592,2450000.0,3326.0

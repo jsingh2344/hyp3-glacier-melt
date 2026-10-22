@@ -1,0 +1,62 @@
+UNRESOLVED RESIDUALS: SOURCE DETERMINED — 22 October 2026
+
+Conclusion
+Every residual in the previous 028627 replay is explained by a mismatched DEM input. The local August datacube/DEM was prepared using bilinear interpolation when projecting Copernicus source tiles onto a 30 m UTM grid. The historical September product used cubic interpolation at that same stage. Both paths then averaged onto the 100 m metric grid and rounded to metres. Aligning only the last 100 m resampling step had not eliminated the earlier interpolation difference.
+
+This was an investigation only. No workflow, tests, configuration, README, or container image was changed in this turn. All new files are diagnostic artifacts under analysis/residual_investigation. New diagnostic DEM rasters were created separately; existing DEMs, datacubes, products and previous experiments were not overwritten.
+
+Evidence chain
+1. Inspected the existing historical image ghcr.io/jsingh2344/hyp3-glacier-melt:test (image c63e1e18cd38, revision label 4dae4629b553c96b301dfb28b972ea327f808243), with network disabled and no writable mounts. Its datacube metric source matches the current metric source apart from trailing whitespace. Its hyp3lib DEM preparation explicitly uses cubic interpolation on the 30 m projection.
+2. Warped the four existing local Copernicus tiles onto the exact bounds/resolution of DEM/dem.tif using six kernels. Bilinear reproduced every float pixel in that local raster exactly (mean/max absolute difference zero, 100% exact). Cubic did not. Changing AREA_OR_POINT metadata between Point and Area did not change that conclusion. This identifies the numeric origin of the local DEM independently of filenames or assumptions.
+3. Reconstructed the historical 30 m DEM from those same local tiles using the historical source-Copernicus preparation: buffered bounds, cubic interpolation, target-aligned 30 m pixels, then the existing average-to-100 m and rounding procedure. Local file paths substituted for tile lookup; network-based footprint lookup was bypassed because the local tile coverage is known. No data were downloaded.
+4. Reused identical archived onset maps, source SAR validity mask, glacier geometry, acquisition dates and metric code. Only the DEM supplied to the diagnostic replay changed.
+5. Replayed all 31 archived source glaciers on all 226 dates across 2017–2024. All 7,006 rows match for all eight metric columns, including melt/ice fractions and maximum elevation. Every numeric difference is exactly zero, with no NaN mismatches: 56,048 matching metric cells. This completely resolves the residuals observed in that replay.
+
+Magnitude of the input change
+Across the 30,387 SAR-valid pixels belonging to the 31 glaciers, 5,932 integer elevation values differ between the local bilinear and reconstructed cubic DEMs. Mean absolute difference is 0.204265 m; maximum absolute difference is 4 m. Most changed values differ by one metre. Thus small elevation changes, not kilometre-scale shifts in terrain, caused the large metric outliers.
+
+Why the outliers were so large
+The first melt correction operates in 20 m elevation bins. Its >90% branch requires more than 10 pixels. A separate 100% branch has NO minimum population requirement and stops searching after the first fully melted bin. It can activate on 1/1 or 2/2 pixels. Elevation rounding moves individual pixels across strict (lower, upper] bin edges. That changes whether the correction fills all lower glacier elevations. Rank-based melt elevation and the subsequent snowline cutoff amplify the change.
+
+Exact largest melt-elevation outlier
+Glacier 01.05584, 2019-08-29, elevation bin (3140, 3160] m:
+- Local bilinear DEM: 2 melted pixels out of 3, fraction 66.67%; no first correction.
+- Historical cubic DEM: 2/2, fraction 100%; the first correction activates at 3140 m.
+- The one non-melted pixel moves from 3159 m (bilinear) to 3162 m (cubic), leaving that bin.
+- Final melt extent: 2704 m (bilinear replay) versus 3275 m (historical/cubic), a 571 m difference.
+- This is not a 571 m DEM error: it is a 3 m change to one pixel moving it across a bin boundary, switching a glacier-wide correction.
+
+Exact largest ice-area outlier
+Glacier 01.05813, 2017-08-27, bin (2680, 2700] m:
+- Bilinear: 5/6 pixels satisfy all-melt, fraction 83.33%.
+- Cubic: 6/6, fraction 100%; the first correction activates at 2680 m.
+- A melted pixel moves 2680 -> 2681 m and enters the bin; a non-melted pixel moves 2700 -> 2701 m and leaves it.
+- Melt-elevation-derived snowline cutoff changes 2448 -> 2744 m.
+- Ice pixels admitted by that cutoff change 2821 -> 3278.
+- Ice area changes 28.21 -> 32.78 km2: the entire 4.57 km2 residual.
+
+Exact largest snowline outlier
+Glacier 01.05904, 2017-12-25, bin (2880, 2900] m:
+- Bilinear: no pixels in the bin.
+- Cubic: one melted pixel, which moves 2901 -> 2900 m, produces a 1/1 (100%) bin.
+- The correction activates at 2880 m, changing the later snowline cutoff 3042 -> 3326 m.
+- Final snowline changes 3036 -> 3309 m: the 273 m residual.
+
+Exact largest melt-area outlier
+Glacier 01.05904, 2020-05-19, bin (2240, 2260] m:
+- Bilinear: 3/3, triggering the 100% correction.
+- Cubic: 3/4, no correction. One non-melted pixel moves 2240 -> 2241 m and enters the bin.
+- Final melt area is 1.07 km2 with bilinear versus 0.42 km2 with cubic: the 0.65 km2 residual.
+
+Interpretation and scope
+The prior implementation experiment was a correct replay of the available local cube, but the historical ZIP was generated from a different numeric DEM. Calling the remaining differences unexplained stitching errors was incorrect. This investigation identifies the earlier 30 m projection kernel as the missing input-provenance difference, and demonstrates complete historical reproduction once that input is reconstructed.
+The threshold calculation remains highly sensitive, including single-pixel 100% bins. Reproducing the historical output demonstrates provenance and numerical consistency; it does not establish the scientific desirability of those corrections.
+The scope is all residuals from the 31-glacier 028627 experiment. It does not validate the separate 028628 burst, the 17 stitched-only glaciers, or the scientific accuracy of earliest-DOY fusion. No proposed fixes were implemented.
+
+Artifacts
+reconstruction_summary.csv: 7,006/7,006 exact values for every metric.
+local_dem_kernel_audit.csv: bilinear reproduces local 30 m DEM at 100% of pixels.
+critical_bin_membership.csv and critical_bin_pixels.csv: exact triggering counts and individual pixel changes.
+outlier_calculation_traces.json: line-level observations of the unchanged production metric routine.
+reconstructed_replay/: replay CSVs generated with the historical DEM reconstruction.
+residual_source.png: agreement and threshold plots.

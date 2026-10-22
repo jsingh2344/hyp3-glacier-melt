@@ -1,7 +1,9 @@
 """Objects used to hold annual day-of-year maps."""
 
+import json
 import os
 
+import numpy as np
 import rasterio
 from rasterio.transform import from_origin
 
@@ -72,7 +74,11 @@ def create_and_write_doy_products(datacube, year, output_dir):
 
     output_files = []
 
-    for map_name, array in products.as_dict().items():
+    arrays = products.as_dict()
+    # Keep acquisition validity distinct from the absence of a detected event.
+    arrays['validity_mask'] = np.isfinite(datacube.mask_good_pixels).astype('float32')
+    arrays['metric_dem'] = datacube.dem
+    for map_name, array in arrays.items():
         output_path = os.path.join(
             output_dir,
             f"{map_name}_doy_{year}.tif",
@@ -94,6 +100,10 @@ def create_and_write_doy_products(datacube, year, output_dir):
             compress="deflate",
         ) as output_tiff:
             output_tiff.write(output_array, 1)
+            if map_name == 'validity_mask':
+                dates = np.asarray(datacube.ds.time.values).astype('datetime64[D]')
+                dates = dates[dates.astype('datetime64[Y]').astype(int) + 1970 == year]
+                output_tiff.update_tags(acquisition_dates=json.dumps(sorted(set(dates.astype(str)))))
 
         output_files.append(output_path)
 

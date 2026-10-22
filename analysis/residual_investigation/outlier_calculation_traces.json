@@ -1,0 +1,697 @@
+[
+  {
+    "glacier": "01.05584",
+    "date": "2019-08-29",
+    "dem": "bilinear_30m",
+    "events": [
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 0.0,
+        "melted_pixels": 1238
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2704.0,
+        "melted_pixels": 1238
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 2066.0,
+        "upper": 2084.0,
+        "pixels": 14,
+        "melted": 13,
+        "fraction": 0.9285714285714286,
+        "trigger": ">90%"
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 2098.0,
+        "upper": 2109.0,
+        "pixels": 13,
+        "melted": 13,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 2098.0,
+        "melt_extent_elev": 2704.0,
+        "melt_extent_elev_min": 2554.0,
+        "nomelt_pixels_below": 96.0,
+        "min_idx": 1141.0,
+        "melted_pixels": 1238,
+        "snowline_pixels": 1236
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 2098.0,
+        "melt_extent_elev": 2704.0,
+        "melt_extent_elev_min": 2554.0,
+        "nomelt_pixels_below": 96.0,
+        "min_idx": 1141.0,
+        "melt_pixels": 1316.0,
+        "melt_area_m2": 13160000.0,
+        "melted_pixels": 1316,
+        "snowline_pixels": 1236
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2098.0,
+        "melt_extent_elev": 2704.0,
+        "melt_extent_elev_min": 2554.0,
+        "nomelt_pixels_below": 96.0,
+        "min_idx": 1141.0,
+        "melt_pixels": 1316.0,
+        "melt_area_m2": 13160000.0,
+        "max_snowline": 2554.0,
+        "snowline_elev": 2493.0,
+        "ice_area_m2": 10730000.0,
+        "melted_pixels": 1316,
+        "snowline_pixels": 1073
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2098.0,
+        "melt_extent_elev": 2704.0,
+        "melt_extent_elev_min": 2554.0,
+        "nomelt_pixels_below": 96.0,
+        "min_idx": 1141.0,
+        "melt_pixels": 1316.0,
+        "melt_area_m2": 13160000.0,
+        "max_snowline": 2554.0,
+        "snowline_elev": 2493.0,
+        "ice_area_m2": 10730000.0,
+        "melted_pixels": 1316,
+        "snowline_pixels": 1073
+      }
+    ]
+  },
+  {
+    "glacier": "01.05584",
+    "date": "2019-08-29",
+    "dem": "cubic_30m",
+    "events": [
+      {
+        "step": "selected_20m_bin",
+        "lower": 3140.0,
+        "upper": 3160.0,
+        "pixels": 2,
+        "melted": 2,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 3140.0,
+        "melted_pixels": 1238
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 3140.0,
+        "melt_extent_elev": 3275.0,
+        "melted_pixels": 1341
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1910.0,
+        "upper": 1941.0,
+        "pixels": 14,
+        "melted": 14,
+        "fraction": 1.0,
+        "trigger": ">90%"
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1910.0,
+        "upper": 1941.0,
+        "pixels": 14,
+        "melted": 14,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 1910.0,
+        "melt_extent_elev": 3275.0,
+        "melt_extent_elev_min": 3275.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 1340.0,
+        "melted_pixels": 1341,
+        "snowline_pixels": 1236
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 1910.0,
+        "melt_extent_elev": 3275.0,
+        "melt_extent_elev_min": 3275.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 1340.0,
+        "melt_pixels": 1341.0,
+        "melt_area_m2": 13410000.0,
+        "melted_pixels": 1341,
+        "snowline_pixels": 1236
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1910.0,
+        "melt_extent_elev": 3275.0,
+        "melt_extent_elev_min": 3275.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 1340.0,
+        "melt_pixels": 1341.0,
+        "melt_area_m2": 13410000.0,
+        "max_snowline": 3275.0,
+        "snowline_elev": 2697.0,
+        "ice_area_m2": 12360000.0,
+        "melted_pixels": 1341,
+        "snowline_pixels": 1236
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1910.0,
+        "melt_extent_elev": 3275.0,
+        "melt_extent_elev_min": 3275.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 1340.0,
+        "melt_pixels": 1341.0,
+        "melt_area_m2": 13410000.0,
+        "max_snowline": 3275.0,
+        "snowline_elev": 2697.0,
+        "ice_area_m2": 12360000.0,
+        "melted_pixels": 1341,
+        "snowline_pixels": 1236
+      }
+    ]
+  },
+  {
+    "glacier": "01.05813",
+    "date": "2017-08-27",
+    "dem": "bilinear_30m",
+    "events": [
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 0.0,
+        "melted_pixels": 3418
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2519.0,
+        "melted_pixels": 3418
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1996.0,
+        "upper": 2022.0,
+        "pixels": 39,
+        "melted": 38,
+        "fraction": 0.9743589743589743,
+        "trigger": ">90%"
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 2022.0,
+        "upper": 2042.0,
+        "pixels": 36,
+        "melted": 36,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 2022.0,
+        "melt_extent_elev": 2519.0,
+        "melt_extent_elev_min": 2448.0,
+        "nomelt_pixels_below": 309.0,
+        "min_idx": 3108.0,
+        "melted_pixels": 3418,
+        "snowline_pixels": 3279
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 2022.0,
+        "melt_extent_elev": 2519.0,
+        "melt_extent_elev_min": 2448.0,
+        "nomelt_pixels_below": 309.0,
+        "min_idx": 3108.0,
+        "melt_pixels": 3723.0,
+        "melt_area_m2": 37230000.0,
+        "melted_pixels": 3723,
+        "snowline_pixels": 3279
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2022.0,
+        "melt_extent_elev": 2519.0,
+        "melt_extent_elev_min": 2448.0,
+        "nomelt_pixels_below": 309.0,
+        "min_idx": 3108.0,
+        "melt_pixels": 3723.0,
+        "melt_area_m2": 37230000.0,
+        "max_snowline": 2448.0,
+        "snowline_elev": 2404.0,
+        "ice_area_m2": 28210000.0,
+        "melted_pixels": 3723,
+        "snowline_pixels": 2821
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2022.0,
+        "melt_extent_elev": 2519.0,
+        "melt_extent_elev_min": 2448.0,
+        "nomelt_pixels_below": 309.0,
+        "min_idx": 3108.0,
+        "melt_pixels": 3723.0,
+        "melt_area_m2": 37230000.0,
+        "max_snowline": 2448.0,
+        "snowline_elev": 2404.0,
+        "ice_area_m2": 28210000.0,
+        "melted_pixels": 3723,
+        "snowline_pixels": 2821
+      }
+    ]
+  },
+  {
+    "glacier": "01.05813",
+    "date": "2017-08-27",
+    "dem": "cubic_30m",
+    "events": [
+      {
+        "step": "selected_20m_bin",
+        "lower": 2680.0,
+        "upper": 2700.0,
+        "pixels": 6,
+        "melted": 6,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 2680.0,
+        "melted_pixels": 3418
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 2680.0,
+        "melt_extent_elev": 2744.0,
+        "melted_pixels": 3727
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1426.0,
+        "upper": 1481.0,
+        "pixels": 36,
+        "melted": 36,
+        "fraction": 1.0,
+        "trigger": ">90%"
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1426.0,
+        "upper": 1481.0,
+        "pixels": 36,
+        "melted": 36,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 1426.0,
+        "melt_extent_elev": 2744.0,
+        "melt_extent_elev_min": 2744.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 3726.0,
+        "melted_pixels": 3727,
+        "snowline_pixels": 3279
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 1426.0,
+        "melt_extent_elev": 2744.0,
+        "melt_extent_elev_min": 2744.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 3726.0,
+        "melt_pixels": 3727.0,
+        "melt_area_m2": 37270000.0,
+        "melted_pixels": 3727,
+        "snowline_pixels": 3279
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1426.0,
+        "melt_extent_elev": 2744.0,
+        "melt_extent_elev_min": 2744.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 3726.0,
+        "melt_pixels": 3727.0,
+        "melt_area_m2": 37270000.0,
+        "max_snowline": 2744.0,
+        "snowline_elev": 2478.0,
+        "ice_area_m2": 32780000.0,
+        "melted_pixels": 3727,
+        "snowline_pixels": 3278
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1426.0,
+        "melt_extent_elev": 2744.0,
+        "melt_extent_elev_min": 2744.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 3726.0,
+        "melt_pixels": 3727.0,
+        "melt_area_m2": 37270000.0,
+        "max_snowline": 2744.0,
+        "snowline_elev": 2478.0,
+        "ice_area_m2": 32780000.0,
+        "melted_pixels": 3727,
+        "snowline_pixels": 3278
+      }
+    ]
+  },
+  {
+    "glacier": "01.05904",
+    "date": "2020-05-19",
+    "dem": "bilinear_30m",
+    "events": [
+      {
+        "step": "selected_20m_bin",
+        "lower": 2240.0,
+        "upper": 2260.0,
+        "pixels": 3,
+        "melted": 3,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 2240.0,
+        "melted_pixels": 42
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 2240.0,
+        "melt_extent_elev": 2299.0,
+        "melted_pixels": 107
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1916.0,
+        "upper": 1985.0,
+        "pixels": 10,
+        "melted": 10,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 1916.0,
+        "melt_extent_elev": 2299.0,
+        "melt_extent_elev_min": 2275.0,
+        "nomelt_pixels_below": 6.0,
+        "min_idx": 100.0,
+        "melted_pixels": 107,
+        "snowline_pixels": 202
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 1916.0,
+        "melt_extent_elev": 2299.0,
+        "melt_extent_elev_min": 2275.0,
+        "nomelt_pixels_below": 6.0,
+        "min_idx": 100.0,
+        "melt_pixels": 107.0,
+        "melt_area_m2": 1070000.0,
+        "melted_pixels": 107,
+        "snowline_pixels": 202
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1916.0,
+        "melt_extent_elev": 2299.0,
+        "melt_extent_elev_min": 2275.0,
+        "nomelt_pixels_below": 6.0,
+        "min_idx": 100.0,
+        "melt_pixels": 107.0,
+        "melt_area_m2": 1070000.0,
+        "max_snowline": 2275.0,
+        "snowline_elev": 2156.0,
+        "ice_area_m2": 680000.0,
+        "melted_pixels": 107,
+        "snowline_pixels": 68
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1916.0,
+        "melt_extent_elev": 2299.0,
+        "melt_extent_elev_min": 2275.0,
+        "nomelt_pixels_below": 6.0,
+        "min_idx": 100.0,
+        "melt_pixels": 107.0,
+        "melt_area_m2": 1070000.0,
+        "max_snowline": 2275.0,
+        "snowline_elev": 2156.0,
+        "ice_area_m2": 680000.0,
+        "melted_pixels": 107,
+        "snowline_pixels": 68
+      }
+    ]
+  },
+  {
+    "glacier": "01.05904",
+    "date": "2020-05-19",
+    "dem": "cubic_30m",
+    "events": [
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 0.0,
+        "melted_pixels": 42
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2077.0,
+        "melted_pixels": 42
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2077.0,
+        "melt_extent_elev_min": 1915.0,
+        "nomelt_pixels_below": 41.0,
+        "min_idx": 0.0,
+        "melted_pixels": 42,
+        "snowline_pixels": 202
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2077.0,
+        "melt_extent_elev_min": 1915.0,
+        "nomelt_pixels_below": 41.0,
+        "min_idx": 0.0,
+        "melt_pixels": 42.0,
+        "melt_area_m2": 420000.0,
+        "melted_pixels": 42,
+        "snowline_pixels": 202
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2077.0,
+        "melt_extent_elev_min": 1915.0,
+        "nomelt_pixels_below": 41.0,
+        "min_idx": 0.0,
+        "melt_pixels": 42.0,
+        "melt_area_m2": 420000.0,
+        "max_snowline": 1915.0,
+        "snowline_elev": NaN,
+        "ice_area_m2": 0.0,
+        "melted_pixels": 42,
+        "snowline_pixels": 0
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 2077.0,
+        "melt_extent_elev_min": 1915.0,
+        "nomelt_pixels_below": 41.0,
+        "min_idx": 0.0,
+        "melt_pixels": 42.0,
+        "melt_area_m2": 420000.0,
+        "max_snowline": 1915.0,
+        "snowline_elev": NaN,
+        "ice_area_m2": 0.0,
+        "melted_pixels": 42,
+        "snowline_pixels": 0
+      }
+    ]
+  },
+  {
+    "glacier": "01.05904",
+    "date": "2017-12-25",
+    "dem": "bilinear_30m",
+    "events": [
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 0.0,
+        "melted_pixels": 212
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 0.0,
+        "melt_extent_elev": 3180.0,
+        "melted_pixels": 212
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 2135.0,
+        "upper": 2163.0,
+        "pixels": 10,
+        "melted": 10,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 2135.0,
+        "melt_extent_elev": 3180.0,
+        "melt_extent_elev_min": 3042.0,
+        "nomelt_pixels_below": 32.0,
+        "min_idx": 179.0,
+        "melted_pixels": 212,
+        "snowline_pixels": 244
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 2135.0,
+        "melt_extent_elev": 3180.0,
+        "melt_extent_elev_min": 3042.0,
+        "nomelt_pixels_below": 32.0,
+        "min_idx": 179.0,
+        "melt_pixels": 241.0,
+        "melt_area_m2": 2410000.0,
+        "melted_pixels": 241,
+        "snowline_pixels": 244
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2135.0,
+        "melt_extent_elev": 3180.0,
+        "melt_extent_elev_min": 3042.0,
+        "nomelt_pixels_below": 32.0,
+        "min_idx": 179.0,
+        "melt_pixels": 241.0,
+        "melt_area_m2": 2410000.0,
+        "max_snowline": 3042.0,
+        "snowline_elev": 3036.0,
+        "ice_area_m2": 1790000.0,
+        "melted_pixels": 241,
+        "snowline_pixels": 179
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 2135.0,
+        "melt_extent_elev": 3180.0,
+        "melt_extent_elev_min": 3042.0,
+        "nomelt_pixels_below": 32.0,
+        "min_idx": 179.0,
+        "melt_pixels": 241.0,
+        "melt_area_m2": 2410000.0,
+        "max_snowline": 3042.0,
+        "snowline_elev": 3036.0,
+        "ice_area_m2": 1790000.0,
+        "melted_pixels": 241,
+        "snowline_pixels": 179
+      }
+    ]
+  },
+  {
+    "glacier": "01.05904",
+    "date": "2017-12-25",
+    "dem": "cubic_30m",
+    "events": [
+      {
+        "step": "selected_20m_bin",
+        "lower": 2880.0,
+        "upper": 2900.0,
+        "pixels": 1,
+        "melted": 1,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_first_correction",
+        "allmelt_elev": 2880.0,
+        "melted_pixels": 212
+      },
+      {
+        "step": "after_first_correction",
+        "allmelt_elev": 2880.0,
+        "melt_extent_elev": 3326.0,
+        "melted_pixels": 244
+      },
+      {
+        "step": "selected_equal_area_bin",
+        "lower": 1915.0,
+        "upper": 1985.0,
+        "pixels": 10,
+        "melted": 10,
+        "fraction": 1.0,
+        "trigger": "100%"
+      },
+      {
+        "step": "before_second_correction",
+        "allmelt_elev": 1915.0,
+        "melt_extent_elev": 3326.0,
+        "melt_extent_elev_min": 3326.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 243.0,
+        "melted_pixels": 244,
+        "snowline_pixels": 244
+      },
+      {
+        "step": "after_second_correction",
+        "allmelt_elev": 1915.0,
+        "melt_extent_elev": 3326.0,
+        "melt_extent_elev_min": 3326.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 243.0,
+        "melt_pixels": 244.0,
+        "melt_area_m2": 2440000.0,
+        "melted_pixels": 244,
+        "snowline_pixels": 244
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1915.0,
+        "melt_extent_elev": 3326.0,
+        "melt_extent_elev_min": 3326.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 243.0,
+        "melt_pixels": 244.0,
+        "melt_area_m2": 2440000.0,
+        "max_snowline": 3326.0,
+        "snowline_elev": 3309.0,
+        "ice_area_m2": 2430000.0,
+        "melted_pixels": 244,
+        "snowline_pixels": 243
+      },
+      {
+        "step": "final",
+        "allmelt_elev": 1915.0,
+        "melt_extent_elev": 3326.0,
+        "melt_extent_elev_min": 3326.0,
+        "nomelt_pixels_below": 0.0,
+        "min_idx": 243.0,
+        "melt_pixels": 244.0,
+        "melt_area_m2": 2440000.0,
+        "max_snowline": 3326.0,
+        "snowline_elev": 3309.0,
+        "ice_area_m2": 2430000.0,
+        "melted_pixels": 244,
+        "snowline_pixels": 243
+      }
+    ]
+  }
+]

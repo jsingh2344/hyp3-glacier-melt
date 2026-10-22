@@ -1,0 +1,38 @@
+{
+  "glacier": "01.05878",
+  "date": "2020-05-19",
+  "doy": 140,
+  "raw_melt_pixels": 1542,
+  "original_area_m2": 30270000.0,
+  "unmasked_area_m2": 15420000.0,
+  "difference_m2": -14850000.0,
+  "excluded_pixels": 34,
+  "stages": {
+    "source_good": {
+      "first_correction_elevation": 0.0,
+      "after_first_correction_pixels": 1542,
+      "selected_bins": [],
+      "second_correction_elevation": 2007.0,
+      "after_second_correction_pixels": 3027,
+      "second_selected_bins": [
+        {
+          "stage": "source_good",
+          "lower_m": 2007.0,
+          "upper_m": 2023.0,
+          "pixels": 54,
+          "allmelt_pixels": 49,
+          "fraction": 0.9074074074074074,
+          "selected": ">90% and >10 pixels"
+        }
+      ]
+    },
+    "source_demfinite": {
+      "first_correction_elevation": 0.0,
+      "after_first_correction_pixels": 1542,
+      "selected_bins": [],
+      "second_correction_elevation": 0.0,
+      "after_second_correction_pixels": 1542,
+      "second_selected_bins": []
+    }
+  }
+}

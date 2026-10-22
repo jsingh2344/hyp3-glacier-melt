@@ -1,0 +1,56 @@
+[
+  {
+    "run": "local_single",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  },
+  {
+    "run": "local_stitched",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  },
+  {
+    "run": "container_single",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  },
+  {
+    "run": "container_stitched",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  },
+  {
+    "run": "container_reversed",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  },
+  {
+    "run": "container_external",
+    "glaciers": 31,
+    "dates_per_glacier": 226,
+    "rows": 7006,
+    "metrics": 8,
+    "metric_values": 56048,
+    "exact": true
+  }
+]

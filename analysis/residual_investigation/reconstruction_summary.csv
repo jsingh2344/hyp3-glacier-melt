@@ -1,0 +1,9 @@
+metric,rows,equal,sum_abs,finite,max_abs,nan_mismatch,mae
+glacier_area_m2,7006,7006,0.0,7006,0.0,0,0.0
+glacier_max_elev_m,7006,7006,0.0,7006,0.0,0,0.0
+ice_area_m2,7006,7006,0.0,7006,0.0,0,0.0
+ice_fraction,7006,7006,0.0,7006,0.0,0,0.0
+melt_area_m2,7006,7006,0.0,7006,0.0,0,0.0
+melt_extent_elev_m,7006,7006,0.0,7006,0.0,0,0.0
+melt_fraction,7006,7006,0.0,7006,0.0,0,0.0
+snowline_elev_m,7006,7006,0.0,7006,0.0,0,0.0

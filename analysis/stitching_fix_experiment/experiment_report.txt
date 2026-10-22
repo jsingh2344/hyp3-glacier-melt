@@ -1,0 +1,29 @@
+CORRECTED DOY WORKFLOW EXPERIMENT — 22 October 2026
+
+Implementation
+New primary products export the original SAR validity mask and the metric DEM next to the event maps for every year. The DOY path masks each source before event merging, unions explicit validity, and applies the resulting mask consistently to event counts and DEM distributions. It uses the embedded metric DEM without downloading/reprojecting it. An explicit external DEM uses average resampling plus rounding. DEM overlap priority is deterministic by geographic bounds then content; event fusion retains the earliest valid DOY. Partial companions and varying yearly global validity/DEMs are rejected. Original SAR-valid-area glacier eligibility is enforced when explicit masks are present. Legacy products remain readable with a warning because they lack enough information for faithful reproduction.
+
+Experiment design
+Used the real 028627 product maps, native local cube DEM, original all-acquisition SAR validity mask, RGI polygons, and all 226 original acquisition dates across 2017–2024. The actual primary export function wrote new-format TIFFs; actual discovery, mosaic, eligibility, adapter and metric pipeline functions read them. An exact-date evaluation harness replaced only the output evaluation calendar.
+Compared: (1) legacy DEM-only validity plus bilinear DEM control; (2) corrected single source; (3) corrected two-tile stitch, made by splitting the same real product into overlapping spatial tiles; (4) reversed tile input order.
+The tiles overlap by 160 columns. They are not two independently observed bursts. This controlled invariant verifies that partitioning/stitching itself does not change metrics when the underlying observations are unchanged. No Docker image was rebuilt or tested here.
+
+Results
+Legacy pipeline selected 44 glaciers; corrected single and both tile runs selected the original 31, with no processing failures.
+All six compared metrics agree exactly between corrected single and corrected stitched/reversed outputs for all 7,006 source glacier/date rows. The metrics are melt area, ice area, melt extent elevation, snowline elevation, glacier area and maximum elevation. Comparison tolerance: absolute 1e-6, relative 0, matching NaNs.
+Threshold case 01.05878 on 2020-05-19: old 15.42 km2; corrected single 30.27 km2; corrected stitched 30.27 km2; reversed 30.27 km2; historical source ZIP 30.27 km2.
+
+Comparison against the historical ZIP:
+Metric                  Before exact    Corrected exact    Before MAE       Corrected MAE
+Melt area               78.32%          97.17%             0.05098 km2      0.000671 km2
+Ice area                75.99%          93.16%             0.10327 km2      0.003284 km2
+Melt extent elevation    0.03%          60.33%            18.34 m           1.19 m
+Snowline elevation       0.01%          68.53%            22.56 m           1.00 m
+Glacier area           100.00%         100.00%             0                 0
+Maximum elevation        0.00%          41.94%             6.99 m           0.65 m
+
+Residuals and limits
+This fixes the demonstrated validity-mask inconsistency, the threshold example, inconsistent DEM preparation and SAR-area eligibility in the controlled test. It does not establish exact reproduction of every historical ZIP value or physical accuracy.
+The archived ZIP does not preserve its exact original metric DEM/validity and run provenance. The available local cube differs slightly (maximum elevation differences up to 2 m), and some historical differences remain after correction. Their exact attribution is not established by this experiment. Max residuals against the ZIP are 0.65 km2 melt area, 4.57 km2 ice area, 571 m melt elevation and 273 m snowline; small mean errors must not conceal these outliers.
+The original second burst 028628 has no matching native datacube/validity mask locally. A scientifically consistent test combining both independent bursts requires regenerating both products with the new companions. Earliest-event fusion can legitimately change results where independent sources disagree, and union validity can expand usable observation coverage.
+34 tests pass, including new mask-consistency, invalid-event overlap, input-order, partial-companion, yearly-validity and SAR-area-eligibility regressions. Focused lint and whitespace checks pass.

@@ -1,0 +1,52 @@
+STITCHING WORKFLOW DIAGNOSIS — 22 October 2026
+
+Scope
+Recomputed the existing metric implementation on all 31 source glaciers in burst 028627, on all 226 original acquisition dates (2017–2024): 7,006 rows per successful intervention. Five interventions held the raster grid and glacier footprint constant while varying maps, SAR validity mask, and DEM. Inputs were the two existing product ZIPs, the local 028627 datacube, local DEM/dem.tif, and bundled local RGI data. No production source or container image was changed. This is a local metric-level diagnostic, not a new full Docker integration test.
+
+Main correction to the previous diagnosis
+The previous report over-attributed large discrepancies to overlap conflicts. Five named problem glaciers (01.05582, 01.05583, 01.05836, 01.05839, 01.05878) have ZERO changes in any of the four consumed maps over all eight years when the second burst is merged. Their discrepancies cannot be explained by changed onset dates from stitching.
+
+Root cause 1: different valid-pixel populations
+Original datacube.load_image_data defines mask_good_pixels from pixels having finite, above-filter SAR observations on EVERY acquisition. The DOY adapter instead uses every finite DEM pixel. For the 31 source glaciers, this restores 201 formerly excluded pixels across 9 glaciers, out of 30,588 RGI pixels. Rasterized RGI masks agree exactly with stored masks for all 31 glaciers. The footprint is stable while the population used to build elevation distributions and bins changes.
+
+The four DOY maps alone do not unambiguously encode the original SAR mask: a NaN can represent missing observations or absence of that particular detected event. A faithful adapter needs explicit validity/coverage information, not a DEM-only proxy.
+
+Threshold amplification — exact worked example
+Glacier 01.05878, 2020-05-19 (DOY 140): all maps and DEM elevations held fixed; 34 original SAR-excluded pixels restored.
+Raw melted pixels = 1,542 under both masks.
+With original SAR mask, an equal-area elevation bin spanning (2007, 2023] m has 49/54 melted pixels = 90.7407%. It crosses the >90% threshold. The correction fills lower elevations, resulting in 3,027 melted pixels = 30.27 km2. The original source ZIP CSV also reports 30.27 km2 on that date.
+With DEM-only mask, equal-area bin edges shift. Nearby bins have 46/55 = 83.6364% and 41/50 = 82%. No bin activates the correction. Result = 1,542 pixels = 15.42 km2.
+Difference = -14.85 km2, caused by the validity population and threshold correction, without any change to onset dates.
+
+Mask-only mean absolute effects, all 226 dates:
+01.05582: melt area 0.1991 km2; snowline 130.92 m.
+01.05583: melt area 0.1873 km2; snowline 94.23 m.
+01.05836: melt area 0.0951 km2; snowline 68.74 m.
+01.05839: melt area 0.4420 km2; snowline 87.28 m.
+01.05878: melt area 0.2821 km2; snowline 20.38 m.
+These are direct intervention differences, not errors against ground truth. The per-cause effects are context-dependent and are not additive.
+
+Maximum-elevation outlier
+For 01.05804, the stored local DEM maximum is 2616 m with the original SAR validity mask and 2694 m without it: a 78 m difference. This explains almost all of the previous 79 m discrepancy through a mask change. The remaining metre is within the small DEM-provenance differences observed between the stored cube and source ZIP. The earlier DEM-edge attribution was not established and should be replaced by this measured explanation.
+
+Root cause 2: DEM preparation
+Reprojecting local DEM/dem.tif by average resampling and rounding reproduces the stored local cube DEM exactly on all 31 glacier footprints. Bilinear resampling yields per-glacier mean absolute pixel differences ranging from 0.37 to 1.89 m. Small pixel differences alter rank-derived elevations and threshold/bin membership, which can produce much larger output differences.
+The source ZIP and local stored cube are close but not fully identical: maximum elevations differ by up to 2 m. Reproducing source maps with original validity yields exact melt area on 6808/7006 rows and exact ice area on 6527/7006 rows. Thus the local baseline is not a bit-for-bit replay of the original source run. Some residual errors can be large because the metric routine is threshold-sensitive. These residuals must not be attributed automatically to stitching or the validity mask.
+
+Actual overlap effects
+Across all 31 source glaciers and 8 years, merging changes map pixels on only three glaciers: 01.05777, 01.05804, 01.05813. Counts across all four event types are 13, 1168, and 70 changed pixel-event-years respectively. These counts include earlier conflicting values and filling NaNs, and are not unique geographic pixels.
+For 01.05804, 2024 and other years contain real changes. With the DEM-only mask fixed, merging changes melt area by 0.08969 km2 mean absolute and snowline by 19.03 m across 226 dates. No such map effect exists in the five zero-change problem glaciers above.
+The stitcher takes the minimum independently for each event map. That is a scientific fusion policy and can combine event values from different source bursts. This diagnosis measures its numerical effects; it does not validate its physical accuracy.
+
+Mask consistency failure
+Counterfactual merging with the original 028627 validity mask fails for 01.05804: merged maps contain newly available onset pixels excluded by that old mask, so the metric routine counts more onset pixels than the valid DEM elevation vector contains and indexes past its end. This is a diagnostic configuration, not a claim that the current DEM-only-mask production workflow crashed. A fix must coordinate onset masks and DEM validity; blindly restoring one source mask is insufficient.
+
+Recommended implementation direction
+1. Export explicit per-source validity masks alongside DOY maps, plus the DEM grid/provenance used for metrics.
+2. Define stitched validity consistently with source contributions; apply it to both event maps and DEM-based distributions. Specify whether coverage is per event, per year, or across the full time series.
+3. Align DEM resampling and rounding to the intended reference behavior.
+4. Add regression coverage for a single-source DOY round trip, the 2020-05-19 threshold case, mixed validity in overlaps, and source-order independence.
+5. Separately evaluate the scientific suitability and sensitivity of the hard all-melt correction and minimum-DOY fusion.
+
+Limits
+The numerical causal replay covers burst 028627 only, because the matching original 028628 datacube/SAR validity mask is not present locally. It does not fully attribute the seven source glaciers belonging to burst 028628, or validate the 17 stitched-only glaciers. The previous full two-burst comparison remains historical evidence, not a newly reproduced run. Original temporary Docker products no longer exist. New diagnostic CSVs, plots, hashes, and runnable analysis are retained in this directory.

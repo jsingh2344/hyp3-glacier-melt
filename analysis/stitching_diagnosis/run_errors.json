@@ -1,0 +1,7 @@
+[
+  {
+    "glacier": "01.05804",
+    "stage": "merged_good",
+    "error": "IndexError('index 1050 is out of bounds for axis 0 with size 1037')"
+  }
+]

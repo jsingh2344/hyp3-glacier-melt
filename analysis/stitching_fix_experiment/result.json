@@ -1,0 +1,13 @@
+{
+  "source_glaciers": 31,
+  "rows_per_run": 7006,
+  "threshold_case_melt_area_m2": {
+    "old_behavior": 15420000.0,
+    "corrected_single": 30270000.0,
+    "corrected_stitched": 30270000.0,
+    "corrected_reverse": 30270000.0
+  },
+  "split_overlap_columns": 160,
+  "scope": "028627 real product, single-source replay and two overlapping spatial tiles of that same product; not two independent bursts",
+  "all_stitched_and_reverse_metrics_equal_to_corrected_single": true
+}

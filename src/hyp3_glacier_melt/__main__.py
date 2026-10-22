@@ -133,7 +133,7 @@ def main() -> None:
         if not args.opera_output_dir:
             parser.error("--opera-output-dir is required when --datacube is not provided")
 
-        if config.download_opera_files:
+        if config.download_opera_files: #Download opera files!
             from hyp3_glacier_melt.hyp3_datacube.download_opera_burst_asf import (
                 run_download_opera_burst,
             )
@@ -192,6 +192,8 @@ def main() -> None:
 
                 cube_input_dir = opera_download_dir
 
+
+            #Build cube here !
             generated_datacube = generate_opera_cube(
                 opera_input_dir=cube_input_dir,
                 dem_path=args.opera_dem,
