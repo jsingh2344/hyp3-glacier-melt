@@ -34,3 +34,14 @@ my_script-3.py
 paper
 utility
 src/hyp3-glacier-melt/figures
+
+# Exclude local analysis and downloaded campaign outputs from runtime images.
+analysis
+doy-inputs
+doy-output
+doy-outputs
+alaska-pilot-products
+alaska_pilot_job_ids.json
+hyp3_glacier_melt_job_ids.json
+hyp3_glacier_melt_job_results.json
+src/hyp3_glacier_melt/figures

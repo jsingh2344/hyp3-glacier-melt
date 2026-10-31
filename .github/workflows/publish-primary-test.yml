@@ -1,0 +1,58 @@
+name: Publish primary test image
+
+on:
+  push:
+    branches:
+      - codex/publish-primary-test
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-primary-test
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build primary image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          platforms: linux/amd64
+          tags: ghcr.io/jsingh2344/hyp3-glacier-melt:test-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=test-${{ github.sha }}
+          cache-from: type=gha,scope=primary-test
+          cache-to: type=gha,mode=max,scope=primary-test
+      - name: Verify primary CLI and run tests in image
+        env:
+          IMAGE: ghcr.io/jsingh2344/hyp3-glacier-melt:test-${{ github.sha }}
+        run: |
+          docker run --rm "$IMAGE" --help
+          docker run --rm --entrypoint conda \
+            -v "$GITHUB_WORKSPACE/tests:/tests:ro" -w /tmp \
+            "$IMAGE" run --no-capture-output -n hyp3-glacier-melt \
+            python -m pytest /tests -q -p no:cacheprovider
+      - name: Publish verified image under test
+        env:
+          IMAGE: ghcr.io/jsingh2344/hyp3-glacier-melt:test-${{ github.sha }}
+        run: |
+          docker push "$IMAGE"
+          docker tag "$IMAGE" ghcr.io/jsingh2344/hyp3-glacier-melt:test
+          docker push ghcr.io/jsingh2344/hyp3-glacier-melt:test
