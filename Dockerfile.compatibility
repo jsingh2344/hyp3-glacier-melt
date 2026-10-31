@@ -1,0 +1,8 @@
+# Preserve the exact runtime that successfully processed the September pilot.
+FROM ghcr.io/jsingh2344/hyp3-glacier-melt@sha256:8da01181bbcecc0cbc09d3627551bd3eb421b562cd3e2b45a98d7a47fd2efcef
+COPY src /hyp3-glacier-melt/src
+# Run the updated source without reinstalling or upgrading any dependencies.
+ENV PYTHONPATH=/hyp3-glacier-melt/src
+LABEL org.opencontainers.image.base.digest="sha256:8da01181bbcecc0cbc09d3627551bd3eb421b562cd3e2b45a98d7a47fd2efcef"
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "hyp3-glacier-melt", "python", "-m", "hyp3_glacier_melt"]
+CMD ["-h"]
