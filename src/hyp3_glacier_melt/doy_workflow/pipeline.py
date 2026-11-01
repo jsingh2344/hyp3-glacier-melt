@@ -83,7 +83,8 @@ class AnnualDoyMaps:
 
 
 def _masked_source(
-    stack: ExitStack, path: Path, validity_path: Path, dem_path: Path
+    stack: ExitStack, path: Path, validity_path: Path, dem_path: Path,
+    seasonal: bool = False,
 ) -> rasterio.io.DatasetReader:
     """Mask each source before merging so invalid events cannot win overlaps."""
     source = stack.enter_context(rasterio.open(path))
@@ -97,6 +98,8 @@ def _masked_source(
     valid_values = validity.read(1, masked=True).filled(0)
     valid = np.isfinite(valid_values) & (valid_values > 0)
     valid &= np.isfinite(dem.read(1, masked=True).filled(np.nan))
+    if seasonal and validity.tags().get('analysis_status') == 'insufficient_observations':
+        valid[:] = False
     values = source.read(1, masked=True).astype('float32').filled(np.nan)
     if path == validity_path:
         values = np.where(valid, 1.0, np.nan).astype('float32')
@@ -243,9 +246,11 @@ def mosaic_annual_maps(paths_by_name: dict[str, list[Path]], year: int) -> Annua
                 raise ValueError(f'Duplicate {name} maps in one source for {year}')
     acquisition_dates = set()
     complete_calendar = explicit_validity
+    has_skipped_source = False
     for path in paths_by_name.get('validity_mask', []):
         with rasterio.open(path) as dataset:
             encoded_dates = dataset.tags().get('acquisition_dates')
+            has_skipped_source |= dataset.tags().get('analysis_status') == 'insufficient_observations'
         if encoded_dates is None:
             complete_calendar = False
             continue
@@ -331,6 +336,18 @@ def mosaic_annual_maps(paths_by_name: dict[str, list[Path]], year: int) -> Annua
 
     assert grid is not None
     assert common_coverage is not None
+    if has_skipped_source:
+        # Preserve the shared SAR validity/DEM for metric parity, but measure
+        # this year's coverage using only sources with seasonal observations.
+        with ExitStack() as stack:
+            sources = [
+                _masked_source(stack, path, path, grouped['metric_dem'][path.parent], seasonal=True)
+                for path in paths_by_name['validity_mask']
+            ]
+            seasonal_validity, _ = merge(
+                sources, bounds=grid.bounds, nodata=np.nan, dtype='float32', method='min',
+            )
+            common_coverage &= np.isfinite(seasonal_validity[0])
     validity = arrays.pop('validity_mask', None)
     metric_dem = arrays.pop('metric_dem', None)
     return AnnualDoyMaps(
@@ -697,14 +714,12 @@ def run_doy_pipeline(
                 )
                 if valid_area_fraction <= config.min_area_frac:
                     continue
-            if any(
-                np.count_nonzero(glacier_mask & products.coverage)
-                / np.count_nonzero(glacier_mask)
-                < config.min_area_frac
-                for products in annual_products
-            ):
-                continue
             usable_years = usable_onset_years(annual_products, glacier_mask)
+            usable_years &= {
+                products.year for products in annual_products
+                if np.count_nonzero(glacier_mask & products.coverage)
+                / np.count_nonzero(glacier_mask) >= config.min_area_frac
+            }
             usable_years &= set(datacube.years)
             if not usable_years:
                 skipped_without_onsets.append(rgi_id)
@@ -754,4 +769,8 @@ def run_doy_pipeline(
         csv_files=csv_files,
         failed_glacnos=failed_glaciers,
         tiff_files=[],
+        skipped_years={
+            item.year: 'No source has usable seasonal coverage'
+            for item in annual_products if not item.coverage.any()
+        },
     )

@@ -51,6 +51,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
     failed_glacnos: dict[int, str] = {}
     generated_csv_files: list[Path] = []
     generated_doy_files: list[Path] = []
+    skipped_years: dict[int, str] = {}
     ds_fn = datacube_path
     # Path/Row string used for filenames
     pathrow_str = str(ds_fn).split('.nc')[0].split(config.pol_str)[1][1:]
@@ -146,6 +147,9 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
     
         # PIXEL-BY-PIXEL ANALYSIS
         dc.pixel_analysis()
+        skipped_years.update(dc.skipped_years)
+        for year, reason in dc.skipped_years.items():
+            log.warning('Skipping seasonal analysis for %s: %s', year, reason)
         dc.annual_melt_onset_map()
         dc.annual_snowline_post_onset_map()
         dc.annual_snowline_onset_map() 
@@ -204,6 +208,7 @@ def process_datacube_to_melt_extent(datacube_path, config, paths, verbose=False)
         csv_files=generated_csv_files,
         failed_glacnos=failed_glacnos,
         tiff_files=generated_doy_files,
+        skipped_years=skipped_years,
     )
 
 

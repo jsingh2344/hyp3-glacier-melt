@@ -78,6 +78,7 @@ def create_and_write_doy_products(datacube, year, output_dir):
     # Keep acquisition validity distinct from the absence of a detected event.
     arrays['validity_mask'] = np.isfinite(datacube.mask_good_pixels).astype('float32')
     arrays['metric_dem'] = datacube.dem
+    skip_reason = getattr(datacube, 'skipped_years', {}).get(int(year))
     for map_name, array in arrays.items():
         output_path = os.path.join(
             output_dir,
@@ -100,6 +101,10 @@ def create_and_write_doy_products(datacube, year, output_dir):
             compress="deflate",
         ) as output_tiff:
             output_tiff.write(output_array, 1)
+            output_tiff.update_tags(
+                analysis_status='insufficient_observations' if skip_reason else 'complete',
+                skip_reason=skip_reason or '',
+            )
             if map_name == 'validity_mask':
                 dates = np.asarray(datacube.ds.time.values).astype('datetime64[D]')
                 dates = dates[dates.astype('datetime64[Y]').astype(int) + 1970 == year]

@@ -284,6 +284,7 @@ class sar_datacube():
 
         self.min_dB_doys = {}
         self.min_dB_idx = {}
+        self.skipped_years = {}
         dates_pd = pd.DatetimeIndex(self.dates)
         self.years = [x.year for x in dates_pd]
         self.months = [x.month for x in dates_pd]
@@ -311,6 +312,13 @@ class sar_datacube():
         for yr in set(self.years):
             year_idx = [idx for idx, y in enumerate(self.years) if y == yr]
             comb_idx = list(set(year_idx).intersection(summer_idx))
+            if not comb_idx:
+                self.skipped_years[int(yr)] = (
+                    f'No acquisitions in configured snowmelt months {self.snowmelt_months}'
+                )
+                self.min_dB_idx[yr] = np.full(self.data_masked.shape[1:], np.nan)
+                self.min_dB_doys[yr] = np.full(self.data_masked.shape[1:], np.nan)
+                continue
             if comb_idx: # ensure that we have any data for the year
                 # data_summer_min_yr = np.nanpercentile(self.data_masked[comb_idx,:,:], 5, axis=0) # get dB for the 5% of melt pixels
                 data_summer_min_yr = nan_percentile(self.data_masked[comb_idx,:,:], q=5, axis=0) # faster nanpercentile alternative
@@ -348,6 +356,9 @@ class sar_datacube():
         self.melt_onset_doy_maps = {}
         years_unique = np.unique(self.years)
         for nyear, year in enumerate(years_unique):
+            if year in self.skipped_years:
+                self.melt_onset_doy_maps[year] = np.full(self.data_masked.shape[1:], np.nan)
+                continue
 
             # Subset dates for the given year
             year_idx = list(np.where(np.array(self.years) == year)[0])
@@ -392,6 +403,9 @@ class sar_datacube():
         years_unique = np.unique(self.years)
 
         for nyear, year in enumerate(years_unique):
+            if year in self.skipped_years:
+                self.annual_second_onset_map_doy_maps[year] = np.full(self.data_masked.shape[1:], np.nan)
+                continue
             # Subset dates for the given year
             melt_onset_map = self.melt_onset_doy_maps[year] #to implement post onset logic
             sl_onset_map = self.snowline_post_onset_doy_maps[year] #to implement post onset logic
@@ -447,6 +461,9 @@ class sar_datacube():
         
         years_unique = np.unique(self.years)
         for nyear, year in enumerate(years_unique):
+            if year in self.skipped_years:
+                self.snowline_post_onset_doy_maps[year] = np.full(self.data_masked.shape[1:], np.nan)
+                continue
             # Subset dates for the given year
             melt_onset_map = self.melt_onset_doy_maps[year] #to implement post onset logic
             min_dB_map = self.min_dB_doys[year]
@@ -504,6 +521,9 @@ class sar_datacube():
         
         years_unique = np.unique(self.years)
         for nyear, year in enumerate(years_unique):
+            if year in self.skipped_years:
+                self.snowline_onset_doy_maps[year] = np.full(self.data_masked.shape[1:], np.nan)
+                continue
             # Subset dates for the given year
             year_idx = list(np.where(np.array(self.years) == year)[0])
             months_subset = [self.months[x] for x in year_idx]
@@ -568,6 +588,9 @@ class sar_datacube():
         yearly_csv_paths = []
 
         for year in self.melt_onset_doy_maps.keys():
+            if year in getattr(self, "skipped_years", {}):
+                print(f"  Skipping {year}: {self.skipped_years[year]}.")
+                continue
 
             melt_onset_map = self.melt_onset_doy_maps[year]
             original_snowline_onset_map = self.snowline_onset_doy_maps[year]

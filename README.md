@@ -89,6 +89,18 @@ When building a datacube from OPERA RTC-S1 files, the workflow creates a Coperni
 
 ## DOY-only downstream container
 
+The primary workflow also packages DOY maps when no glacier passes the per-burst
+CSV coverage checks. A year with no acquisitions in the configured snowmelt
+months (April–July by default) is recorded in `product_metadata.json` under
+`skipped_years`; its event maps contain only nodata and it contributes no CSV
+rows. Its rasters carry `analysis_status=insufficient_observations` and a
+`skip_reason`. The native DEM and all-acquisition SAR validity mask are retained
+unchanged. The downstream reader excludes these sources from that year's
+seasonal coverage and skips only glacier-years below the coverage requirement,
+while continuing to process observed years. A product with skipped years is
+marked `partial`; a maps-only product can still be `complete` when no processing
+failures or missing-season years were recorded.
+
 The `hyp3_glacier_melt.doy_workflow` package contains the downstream workflow, including its Dockerfile. It builds a second container that accepts only the annual DOY maps emitted by one or more runs of the main container. Its new code is limited to discovering inputs, stitching burst rasters, preparing the DEM/RGI grid, and adapting those arrays to the existing glacier metric implementation. Melt extents, snowlines, areas, fractions, and CSV formatting are still calculated by `sar_datacube.generate_elevs_from_onsets`.
 
 New source products also include `validity_mask_doy_YEAR.tif` (the original

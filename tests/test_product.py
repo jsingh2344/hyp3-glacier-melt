@@ -96,6 +96,25 @@ def test_package_product_rejects_missing_csv(tmp_path: Path) -> None:
         package_product(result, 'missing_product', tmp_path, {})
 
 
+def test_package_product_accepts_map_only_complete_result(tmp_path: Path) -> None:
+    tiff_file = tmp_path / 'melt_onset_doy_2024.tif'
+    tiff_file.write_bytes(b'test tiff')
+    result = MeltRunResult(scenes=3, csv_files=[], failed_glacnos={}, tiff_files=[tiff_file])
+    product = package_product(result, 'maps_only', tmp_path / 'products', {})
+    with ZipFile(product) as archive:
+        metadata = json.loads(archive.read('maps_only/product_metadata.json'))
+        assert metadata['status'] == 'complete'
+        assert metadata['successful_glacier_count'] == 0
+        assert metadata['doy_map_count'] == 1
+        assert metadata['files'] == ['doy_maps/melt_onset_doy_2024.tif']
+
+
+def test_map_only_product_rejects_missing_tiff(tmp_path: Path) -> None:
+    result = MeltRunResult(scenes=3, csv_files=[], failed_glacnos={}, tiff_files=[tmp_path / 'missing.tif'])
+    with pytest.raises(FileNotFoundError, match='Generated TIFF does not exist'):
+        package_product(result, 'missing_map', tmp_path, {})
+
+
 def test_package_product_rejects_duplicate_filenames(tmp_path: Path) -> None:
     csv_a = write_csv(tmp_path / 'a' / 'same.csv')
     csv_b = write_csv(tmp_path / 'b' / 'same.csv')

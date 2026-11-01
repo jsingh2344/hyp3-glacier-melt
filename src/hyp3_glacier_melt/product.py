@@ -2,7 +2,7 @@
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -14,6 +14,7 @@ class MeltRunResult:
     csv_files: list[Path]
     failed_glacnos: dict[int, str]
     tiff_files: list[Path]
+    skipped_years: dict[int, str] = field(default_factory=dict)
 
 
 
@@ -36,14 +37,15 @@ def package_product(
 
     Raises:
         FileExistsError: If the destination ZIP already exists.
-        RuntimeError: If the run did not produce any CSV files or ZIP validation fails.
+        RuntimeError: If the run produced neither CSVs nor DOY maps, or ZIP validation fails.
         ValueError: If an output file list is invalid.
         FileNotFoundError: If a listed output file does not exist.
     """
 
     csv_files = [Path(csv_file) for csv_file in result.csv_files]
-    if not csv_files:
-        raise RuntimeError('Cannot package a run that produced no CSV files')
+    tiff_files = [Path(tiff_file) for tiff_file in result.tiff_files]
+    if not csv_files and not tiff_files:
+        raise RuntimeError('Cannot package a run that produced no CSV files or DOY maps')
 
     csv_names = [csv_file.name for csv_file in csv_files]
     duplicate_names = sorted({name for name in csv_names if csv_names.count(name) > 1})
@@ -56,7 +58,6 @@ def package_product(
         if csv_file.suffix.lower() != '.csv':
             raise ValueError(f'Expected a CSV file, got: {csv_file}')
 
-    tiff_files = [Path(tiff_file) for tiff_file in result.tiff_files]
     tiff_names = [tiff_file.name for tiff_file in tiff_files]
     duplicate_tiff_names = sorted(
         {name for name in tiff_names if tiff_names.count(name) > 1}
@@ -82,7 +83,7 @@ def package_product(
     if product_path.exists():
         raise FileExistsError(f'Product already exists: {product_path}')
 
-    status = 'complete' if not result.failed_glacnos else 'partial'
+    status = 'partial' if result.failed_glacnos or result.skipped_years else 'complete'
     product_metadata = dict(metadata)
     product_metadata.update(
         {
@@ -92,21 +93,30 @@ def package_product(
             'doy_map_count': len(tiff_files),
             'failed_glacier_count': len(result.failed_glacnos),
             'failed_glacnos': result.failed_glacnos,
+            'skipped_year_count': len(result.skipped_years),
+            'skipped_years': result.skipped_years,
             'status': status,
             'files': sorted(packaged_files),
         }
     )
     metadata_text = json.dumps(product_metadata, indent=2, sort_keys=True)
+    csv_note = (
+        'Each CSV contains the melt and snowline time series for one glacier.\n'
+        if csv_files else
+        'No glacier CSVs were produced; the DOY maps are retained for downstream stitching.\n'
+    )
     readme_text = (
         f'{product_name}\n'
         f'Status: {status}\n'
         f'Scenes processed: {result.scenes}\n'
         f'Successful glaciers: {len(csv_files)}\n'
         f'DOY maps: {len(tiff_files)}\n'
-        f'Failed glaciers: {len(result.failed_glacnos)}\n\n'
-        'Each CSV contains the melt and snowline time series for one glacier.\n'
+        f'Failed glaciers: {len(result.failed_glacnos)}\n'
+        f'Years without seasonal observations: {len(result.skipped_years)}\n\n'
+        f'{csv_note}'
         'The doy_maps directory contains the annual intermediate GeoTIFFs.\n'
-        'See product_metadata.json for run metadata and recorded glacier failures.\n'
+        'Years without seasonal observations have nodata event maps and no CSV rows.\n'
+        'See product_metadata.json for run metadata, skipped years and recorded glacier failures.\n'
     )
 
     try:
